@@ -6,10 +6,17 @@ import (
 	"net/http"
 
 	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/config"
+	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/infrastructure/memory"
+	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/service"
+	httptransport "github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/transport/http"
 )
 
 func main() {
 	cfg := config.Load()
+
+	productRepository := memory.NewProductRepository()
+	catalogService := service.NewCatalogService(productRepository)
+	catalogHandler := httptransport.NewCatalogHandler(catalogService)
 
 	mux := http.NewServeMux()
 
@@ -23,10 +30,14 @@ func main() {
 		_, _ = w.Write([]byte("ready"))
 	})
 
+	mux.HandleFunc("GET /products", catalogHandler.ListProducts)
+
 	server := &http.Server{
 		Addr:    cfg.HTTPAddr,
 		Handler: mux,
 	}
+
+	mux.HandleFunc("GET /products/{id}", catalogHandler.GetProduct)
 
 	log.Printf("catalog-service listening on %s", cfg.HTTPAddr)
 
