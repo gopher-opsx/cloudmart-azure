@@ -1,3 +1,6 @@
 go 1.26.6
 
-use ./services/catalog-service
+use (
+	./services/catalog-service
+	./services/cart-service
+)
