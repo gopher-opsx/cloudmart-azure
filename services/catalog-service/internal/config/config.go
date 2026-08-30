@@ -2,15 +2,20 @@ package config
 
 import "os"
 
-const defaultHTTPAddr = ":8081"
+const (
+	defaultHTTPAddr    = ":8081"
+	defaultDatabaseURL = "postgres://cloudmart:cloudmart@localhost:5432/catalog_db?sslmode=disable"
+)
 
 type Config struct {
-	HTTPAddr string
+	HTTPAddr    string
+	DatabaseURL string
 }
 
 func Load() Config {
 	return Config{
-		HTTPAddr: getEnv("HTTP_ADDR", defaultHTTPAddr),
+		HTTPAddr:    getEnv("HTTP_ADDR", defaultHTTPAddr),
+		DatabaseURL: getEnv("DATABASE_URL", defaultDatabaseURL),
 	}
 }
 
