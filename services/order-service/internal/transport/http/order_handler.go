@@ -17,7 +17,6 @@ type createOrderRequest struct {
 	Currency string             `json:"currency"`
 	Items    []domain.OrderItem `json:"items"`
 }
-
 type OrderHandler struct{ orders *service.OrderService }
 
 func NewOrderHandler(orders *service.OrderService) *OrderHandler {
@@ -41,7 +40,6 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusCreated, order)
 }
-
 func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	order, err := h.orders.GetOrder(r.Context(), r.PathValue("id"))
 	if err != nil {
@@ -54,7 +52,6 @@ func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, order)
 }
-
 func (h *OrderHandler) ListOrders(w http.ResponseWriter, r *http.Request) {
 	customerID, ok := customerIDFromRequest(w, r)
 	if !ok {
@@ -67,14 +64,13 @@ func (h *OrderHandler) ListOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, orders)
 }
-
 func customerIDFromRequest(w http.ResponseWriter, r *http.Request) (string, bool) {
-	customerID := strings.TrimSpace(r.Header.Get(customerIDHeader))
-	if customerID == "" {
+	id := strings.TrimSpace(r.Header.Get(customerIDHeader))
+	if id == "" {
 		writeError(w, http.StatusBadRequest, customerIDHeader+" header is required")
 		return "", false
 	}
-	return customerID, true
+	return id, true
 }
 func decodeJSON(r *http.Request, target any) error {
 	d := json.NewDecoder(r.Body)

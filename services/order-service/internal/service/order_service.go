@@ -49,9 +49,8 @@ func (s *OrderService) CreateOrder(ctx context.Context, input CreateOrderInput) 
 	if len(input.Items) == 0 {
 		return domain.Order{}, ErrItemsRequired
 	}
-
-	items := make([]domain.OrderItem, len(input.Items))
 	var total int64
+	items := make([]domain.OrderItem, len(input.Items))
 	for i, item := range input.Items {
 		item.ProductID = strings.TrimSpace(item.ProductID)
 		if item.ProductID == "" {
@@ -66,7 +65,6 @@ func (s *OrderService) CreateOrder(ctx context.Context, input CreateOrderInput) 
 		total += int64(item.Quantity) * item.UnitPriceCents
 		items[i] = item
 	}
-
 	id, err := s.newID()
 	if err != nil {
 		return domain.Order{}, err
@@ -79,7 +77,6 @@ func (s *OrderService) CreateOrder(ctx context.Context, input CreateOrderInput) 
 func (s *OrderService) GetOrder(ctx context.Context, id string) (domain.Order, error) {
 	return s.orders.GetByID(ctx, strings.TrimSpace(id))
 }
-
 func (s *OrderService) ListOrders(ctx context.Context, customerID string) ([]domain.Order, error) {
 	customerID = strings.TrimSpace(customerID)
 	if customerID == "" {
@@ -87,7 +84,6 @@ func (s *OrderService) ListOrders(ctx context.Context, customerID string) ([]dom
 	}
 	return s.orders.ListByCustomer(ctx, customerID)
 }
-
 func generateOrderID() (string, error) {
 	var raw [8]byte
 	if _, err := rand.Read(raw[:]); err != nil {

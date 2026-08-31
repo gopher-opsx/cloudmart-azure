@@ -1,0 +1,75 @@
+package outbox
+
+import (
+	"context"
+	"log"
+	"time"
+
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
+)
+
+type MessagePublisher interface {
+	Publish(ctx context.Context, topic, key string, payload []byte) error
+}
+
+type Publisher struct {
+	outbox    repository.OutboxRepository
+	messages  MessagePublisher
+	poll      time.Duration
+	batchSize int
+}
+
+func NewPublisher(
+	outbox repository.OutboxRepository,
+	messages MessagePublisher,
+	poll time.Duration,
+	batchSize int,
+) *Publisher {
+	return &Publisher{
+		outbox:    outbox,
+		messages:  messages,
+		poll:      poll,
+		batchSize: batchSize,
+	}
+}
+
+func (p *Publisher) Run(ctx context.Context) {
+	ticker := time.NewTicker(p.poll)
+	defer ticker.Stop()
+
+	p.publishBatch(ctx)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			p.publishBatch(ctx)
+		}
+	}
+}
+
+func (p *Publisher) publishBatch(ctx context.Context) {
+	events, err := p.outbox.ClaimBatch(ctx, p.batchSize)
+	if err != nil {
+		log.Printf("outbox: load batch failed: %v", err)
+		return
+	}
+
+	for _, event := range events {
+		if err := p.messages.Publish(ctx, event.Topic, event.EventKey, event.Payload); err != nil {
+			log.Printf("outbox: publish %s failed: %v", event.ID, err)
+			if recordErr := p.outbox.RecordFailure(ctx, event.ID); recordErr != nil {
+				log.Printf("outbox: record failure %s failed: %v", event.ID, recordErr)
+			}
+			continue
+		}
+
+		if err := p.outbox.MarkPublished(ctx, event.ID); err != nil {
+			log.Printf("outbox: mark %s published failed: %v", event.ID, err)
+			continue
+		}
+
+		log.Printf("outbox: published %s (%s)", event.ID, event.EventType)
+	}
+}

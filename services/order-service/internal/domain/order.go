@@ -4,7 +4,9 @@ import "time"
 
 type OrderStatus string
 
-const OrderStatusPending OrderStatus = "pending"
+const (
+	OrderStatusPending OrderStatus = "pending"
+)
 
 type OrderItem struct {
 	ProductID      string `json:"productId"`
