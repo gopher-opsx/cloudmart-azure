@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
+	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/repository"
 )
 
 type MessagePublisher interface {
@@ -26,8 +26,8 @@ func NewPublisher(outbox repository.OutboxRepository, messages MessagePublisher,
 func (p *Publisher) Run(ctx context.Context) {
 	ticker := time.NewTicker(p.poll)
 	defer ticker.Stop()
-
 	p.publishBatch(ctx)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -39,22 +39,21 @@ func (p *Publisher) Run(ctx context.Context) {
 }
 
 func (p *Publisher) publishBatch(ctx context.Context) {
-	events, err := p.outbox.ClaimBatch(ctx, p.batchSize)
+	events, err := p.outbox.LoadBatch(ctx, p.batchSize)
 	if err != nil {
-		log.Printf("outbox: load batch failed: %v", err)
+		log.Printf("payment outbox: load batch failed: %v", err)
 		return
 	}
-
 	for _, event := range events {
 		if err := p.messages.Publish(ctx, event.Topic, event.EventKey, event.Payload); err != nil {
-			log.Printf("outbox: publish %s failed: %v", event.ID, err)
+			log.Printf("payment outbox: publish %s failed: %v", event.ID, err)
 			_ = p.outbox.RecordFailure(ctx, event.ID)
 			continue
 		}
 		if err := p.outbox.MarkPublished(ctx, event.ID); err != nil {
-			log.Printf("outbox: mark %s published failed: %v", event.ID, err)
+			log.Printf("payment outbox: mark published %s failed: %v", event.ID, err)
 			continue
 		}
-		log.Printf("outbox: published %s (%s)", event.ID, event.EventType)
+		log.Printf("payment outbox: published %s (%s)", event.ID, event.EventType)
 	}
 }

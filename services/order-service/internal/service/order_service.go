@@ -34,12 +34,17 @@ type OrderService struct {
 }
 
 func NewOrderService(orders repository.OrderRepository) *OrderService {
-	return &OrderService{orders: orders, now: time.Now, newID: generateOrderID}
+	return &OrderService{
+		orders: orders,
+		now:    time.Now,
+		newID:  generateOrderID,
+	}
 }
 
 func (s *OrderService) CreateOrder(ctx context.Context, input CreateOrderInput) (domain.Order, error) {
 	input.CustomerID = strings.TrimSpace(input.CustomerID)
 	input.Currency = strings.ToUpper(strings.TrimSpace(input.Currency))
+
 	if input.CustomerID == "" {
 		return domain.Order{}, ErrCustomerRequired
 	}
@@ -49,6 +54,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, input CreateOrderInput) 
 	if len(input.Items) == 0 {
 		return domain.Order{}, ErrItemsRequired
 	}
+
 	var total int64
 	items := make([]domain.OrderItem, len(input.Items))
 	for i, item := range input.Items {
@@ -65,18 +71,31 @@ func (s *OrderService) CreateOrder(ctx context.Context, input CreateOrderInput) 
 		total += int64(item.Quantity) * item.UnitPriceCents
 		items[i] = item
 	}
+
 	id, err := s.newID()
 	if err != nil {
 		return domain.Order{}, err
 	}
+
 	now := s.now().UTC()
-	order := domain.Order{ID: id, CustomerID: input.CustomerID, Status: domain.OrderStatusPending, Currency: input.Currency, TotalCents: total, Items: items, CreatedAt: now, UpdatedAt: now}
+	order := domain.Order{
+		ID:         id,
+		CustomerID: input.CustomerID,
+		Status:     domain.OrderStatusPending,
+		Currency:   input.Currency,
+		TotalCents: total,
+		Items:      items,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+
 	return s.orders.Create(ctx, order)
 }
 
 func (s *OrderService) GetOrder(ctx context.Context, id string) (domain.Order, error) {
 	return s.orders.GetByID(ctx, strings.TrimSpace(id))
 }
+
 func (s *OrderService) ListOrders(ctx context.Context, customerID string) ([]domain.Order, error) {
 	customerID = strings.TrimSpace(customerID)
 	if customerID == "" {
@@ -84,6 +103,7 @@ func (s *OrderService) ListOrders(ctx context.Context, customerID string) ([]dom
 	}
 	return s.orders.ListByCustomer(ctx, customerID)
 }
+
 func generateOrderID() (string, error) {
 	var raw [8]byte
 	if _, err := rand.Read(raw[:]); err != nil {

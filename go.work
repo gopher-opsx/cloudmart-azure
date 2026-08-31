@@ -5,4 +5,5 @@ use (
 	./services/cart-service
 	./services/order-service
 	./services/inventory-service
+	./services/payment-service
 )

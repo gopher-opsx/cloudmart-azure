@@ -6,9 +6,7 @@ import (
 )
 
 const (
-	OrderCreatedEventType      = "order.created"
-	OrderConfirmedEventType    = "order.confirmed"
-	OrderCancelledEventType    = "order.cancelled"
+	InventoryReservedEventType = "inventory.reserved"
 	PaymentAuthorizedEventType = "payment.authorized"
 	PaymentFailedEventType     = "payment.failed"
 )
@@ -25,12 +23,15 @@ type EventEnvelope struct {
 	Payload       json.RawMessage `json:"payload"`
 }
 
-type OrderCreatedPayload struct {
-	OrderID    string      `json:"orderId"`
-	CustomerID string      `json:"customerId"`
-	Currency   string      `json:"currency"`
-	TotalCents int64       `json:"totalCents"`
-	Items      []OrderItem `json:"items"`
+type OrderItem struct {
+	ProductID      string `json:"productId"`
+	Quantity       int    `json:"quantity"`
+	UnitPriceCents int64  `json:"unitPriceCents"`
+}
+
+type InventoryReservedPayload struct {
+	OrderID string      `json:"orderId"`
+	Items   []OrderItem `json:"items"`
 }
 
 type PaymentAuthorizedPayload struct {
@@ -46,15 +47,4 @@ type PaymentFailedPayload struct {
 	AmountCents int64  `json:"amountCents"`
 	Currency    string `json:"currency"`
 	Reason      string `json:"reason"`
-}
-
-type OrderConfirmedPayload struct {
-	OrderID   string `json:"orderId"`
-	PaymentID string `json:"paymentId"`
-}
-
-type OrderCancelledPayload struct {
-	OrderID   string `json:"orderId"`
-	PaymentID string `json:"paymentId"`
-	Reason    string `json:"reason"`
 }

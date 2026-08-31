@@ -35,6 +35,11 @@ func main() {
 
 	orderRepository := postgres.NewOrderRepository(dbPool, cfg.OrdersTopic)
 	outboxRepository := postgres.NewOutboxRepository(dbPool)
+
+	orderService := service.NewOrderService(orderRepository)
+	paymentEventService := service.NewPaymentEventService(orderRepository, cfg.OrdersTopic)
+	orderHandler := httptransport.NewOrderHandler(orderService)
+
 	outboxPublisher := outbox.NewPublisher(
 		outboxRepository,
 		kafkaPublisher,
@@ -42,10 +47,16 @@ func main() {
 		cfg.OutboxBatchSize,
 	)
 
-	orderService := service.NewOrderService(orderRepository)
-	orderHandler := httptransport.NewOrderHandler(orderService)
+	paymentConsumer := kafkainfra.NewPaymentConsumer(
+		cfg.KafkaBrokers,
+		cfg.PaymentsTopic,
+		cfg.PaymentsConsumerGroup,
+		paymentEventService,
+	)
+	defer paymentConsumer.Close()
 
 	go outboxPublisher.Run(ctx)
+	go paymentConsumer.Run(ctx)
 
 	mux := http.NewServeMux()
 
@@ -59,7 +70,6 @@ func main() {
 			http.Error(w, "database not ready", http.StatusServiceUnavailable)
 			return
 		}
-
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ready"))
 	})
@@ -84,7 +94,6 @@ func main() {
 	case <-ctx.Done():
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			log.Printf("order-service shutdown failed: %v", err)
 		}

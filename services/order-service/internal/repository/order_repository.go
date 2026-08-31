@@ -13,4 +13,13 @@ type OrderRepository interface {
 	Create(ctx context.Context, order domain.Order) (domain.Order, error)
 	GetByID(ctx context.Context, id string) (domain.Order, error)
 	ListByCustomer(ctx context.Context, customerID string) ([]domain.Order, error)
+	ApplyPaymentEvent(
+		ctx context.Context,
+		sourceEvent domain.EventEnvelope,
+		orderID string,
+		paymentID string,
+		newStatus domain.OrderStatus,
+		reason string,
+		ordersTopic string,
+	) error
 }

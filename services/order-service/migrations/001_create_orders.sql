@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS orders (
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_orders_customer_created ON orders (customer_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_orders_customer_created
+    ON orders (customer_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS order_items (
     order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     line_number INTEGER NOT NULL CHECK (line_number > 0),
@@ -16,4 +19,6 @@ CREATE TABLE IF NOT EXISTS order_items (
     unit_price_cents BIGINT NOT NULL CHECK (unit_price_cents >= 0),
     PRIMARY KEY (order_id, line_number)
 );
-CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items (product_id);
+
+CREATE INDEX IF NOT EXISTS idx_order_items_product
+    ON order_items (product_id);

@@ -26,10 +26,7 @@ func NewPublisher(brokers []string) *Publisher {
 
 func (p *Publisher) Publish(ctx context.Context, topic, key string, payload []byte) error {
 	if err := p.writer.WriteMessages(ctx, kafkago.Message{
-		Topic: topic,
-		Key:   []byte(key),
-		Value: payload,
-		Time:  time.Now().UTC(),
+		Topic: topic, Key: []byte(key), Value: payload, Time: time.Now().UTC(),
 	}); err != nil {
 		return fmt.Errorf("publish kafka message: %w", err)
 	}

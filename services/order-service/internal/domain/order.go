@@ -5,7 +5,9 @@ import "time"
 type OrderStatus string
 
 const (
-	OrderStatusPending OrderStatus = "pending"
+	OrderStatusPending   OrderStatus = "pending"
+	OrderStatusConfirmed OrderStatus = "confirmed"
+	OrderStatusCancelled OrderStatus = "cancelled"
 )
 
 type OrderItem struct {

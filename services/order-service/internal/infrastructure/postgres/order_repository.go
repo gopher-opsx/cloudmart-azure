@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,10 +20,7 @@ type OrderRepository struct {
 }
 
 func NewOrderRepository(pool *pgxpool.Pool, ordersTopic string) *OrderRepository {
-	return &OrderRepository{
-		pool:        pool,
-		ordersTopic: ordersTopic,
-	}
+	return &OrderRepository{pool: pool, ordersTopic: ordersTopic}
 }
 
 func (r *OrderRepository) Create(ctx context.Context, order domain.Order) (domain.Order, error) {
@@ -34,15 +32,9 @@ func (r *OrderRepository) Create(ctx context.Context, order domain.Order) (domai
 
 	_, err = tx.Exec(ctx, `
 		INSERT INTO orders (
-			id,
-			customer_id,
-			status,
-			currency,
-			total_cents,
-			created_at,
-			updated_at
+			id, customer_id, status, currency, total_cents, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES ($1,$2,$3,$4,$5,$6,$7)
 	`,
 		order.ID,
 		order.CustomerID,
@@ -59,13 +51,9 @@ func (r *OrderRepository) Create(ctx context.Context, order domain.Order) (domai
 	for lineNumber, item := range order.Items {
 		_, err = tx.Exec(ctx, `
 			INSERT INTO order_items (
-				order_id,
-				line_number,
-				product_id,
-				quantity,
-				unit_price_cents
+				order_id, line_number, product_id, quantity, unit_price_cents
 			)
-			VALUES ($1, $2, $3, $4, $5)
+			VALUES ($1,$2,$3,$4,$5)
 		`,
 			order.ID,
 			lineNumber+1,
@@ -78,41 +66,7 @@ func (r *OrderRepository) Create(ctx context.Context, order domain.Order) (domai
 		}
 	}
 
-	eventPayload, err := buildOrderCreatedEnvelope(order)
-	if err != nil {
-		return domain.Order{}, err
-	}
-
-	_, err = tx.Exec(ctx, `
-		INSERT INTO outbox_events (
-			id,
-			topic,
-			event_key,
-			event_type,
-			payload,
-			created_at
-		)
-		VALUES ($1, $2, $3, $4, $5::jsonb, $6)
-	`,
-		newOutboxID(order.ID),
-		r.ordersTopic,
-		order.ID,
-		domain.OrderCreatedEventType,
-		eventPayload,
-		order.CreatedAt,
-	)
-	if err != nil {
-		return domain.Order{}, fmt.Errorf("insert outbox event: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return domain.Order{}, fmt.Errorf("commit create order transaction: %w", err)
-	}
-
-	return order, nil
-}
-
-func buildOrderCreatedEnvelope(order domain.Order) ([]byte, error) {
+	eventID := order.ID + "-created"
 	payload, err := json.Marshal(domain.OrderCreatedPayload{
 		OrderID:    order.ID,
 		CustomerID: order.CustomerID,
@@ -121,41 +75,195 @@ func buildOrderCreatedEnvelope(order domain.Order) ([]byte, error) {
 		Items:      order.Items,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("marshal order created payload: %w", err)
+		return domain.Order{}, fmt.Errorf("marshal order.created payload: %w", err)
 	}
 
-	envelope := domain.EventEnvelope{
-		EventID:      newOutboxID(order.ID),
+	envelope, err := json.Marshal(domain.EventEnvelope{
+		EventID:      eventID,
 		EventType:    domain.OrderCreatedEventType,
 		EventVersion: 1,
 		OccurredAt:   order.CreatedAt,
 		AggregateID:  order.ID,
 		Payload:      payload,
+	})
+	if err != nil {
+		return domain.Order{}, fmt.Errorf("marshal order.created envelope: %w", err)
 	}
 
-	encoded, err := json.Marshal(envelope)
+	_, err = tx.Exec(ctx, `
+		INSERT INTO outbox_events (
+			id, topic, event_key, event_type, payload, created_at
+		)
+		VALUES ($1,$2,$3,$4,$5::jsonb,$6)
+	`,
+		eventID,
+		r.ordersTopic,
+		order.ID,
+		domain.OrderCreatedEventType,
+		envelope,
+		order.CreatedAt,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("marshal order created envelope: %w", err)
+		return domain.Order{}, fmt.Errorf("insert order outbox event: %w", err)
 	}
-	return encoded, nil
+
+	if err := tx.Commit(ctx); err != nil {
+		return domain.Order{}, fmt.Errorf("commit create order transaction: %w", err)
+	}
+	return order, nil
 }
 
-func newOutboxID(orderID string) string {
-	return orderID + "-created"
+func (r *OrderRepository) ApplyPaymentEvent(
+	ctx context.Context,
+	sourceEvent domain.EventEnvelope,
+	orderID string,
+	paymentID string,
+	newStatus domain.OrderStatus,
+	reason string,
+	ordersTopic string,
+) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin order status transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var alreadyProcessed bool
+	err = tx.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM processed_events WHERE event_id = $1
+		)
+	`, sourceEvent.EventID).Scan(&alreadyProcessed)
+	if err != nil {
+		return fmt.Errorf("check processed payment event: %w", err)
+	}
+
+	if alreadyProcessed {
+		if err := tx.Commit(ctx); err != nil {
+			return fmt.Errorf("commit duplicate payment event transaction: %w", err)
+		}
+		return nil
+	}
+
+	var currentStatus domain.OrderStatus
+	err = tx.QueryRow(ctx, `
+		SELECT status
+		FROM orders
+		WHERE id = $1
+		FOR UPDATE
+	`, orderID).Scan(&currentStatus)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return repository.ErrOrderNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("load order for status update: %w", err)
+	}
+
+	if currentStatus != domain.OrderStatusPending {
+		_, err = tx.Exec(ctx, `
+			INSERT INTO processed_events (event_id, event_type, processed_at)
+			VALUES ($1,$2,NOW())
+			ON CONFLICT (event_id) DO NOTHING
+		`, sourceEvent.EventID, sourceEvent.EventType)
+		if err != nil {
+			return fmt.Errorf("record ignored payment event: %w", err)
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return fmt.Errorf("commit ignored payment event transaction: %w", err)
+		}
+		return nil
+	}
+
+	now := time.Now().UTC()
+
+	_, err = tx.Exec(ctx, `
+		UPDATE orders
+		SET status = $2, updated_at = $3
+		WHERE id = $1
+	`, orderID, newStatus, now)
+	if err != nil {
+		return fmt.Errorf("update order status: %w", err)
+	}
+
+	var (
+		eventType string
+		eventData any
+	)
+
+	switch newStatus {
+	case domain.OrderStatusConfirmed:
+		eventType = domain.OrderConfirmedEventType
+		eventData = domain.OrderConfirmedPayload{
+			OrderID:   orderID,
+			PaymentID: paymentID,
+		}
+	case domain.OrderStatusCancelled:
+		eventType = domain.OrderCancelledEventType
+		eventData = domain.OrderCancelledPayload{
+			OrderID:   orderID,
+			PaymentID: paymentID,
+			Reason:    reason,
+		}
+	default:
+		return fmt.Errorf("unsupported order status transition: %s", newStatus)
+	}
+
+	payload, err := json.Marshal(eventData)
+	if err != nil {
+		return fmt.Errorf("marshal order status event payload: %w", err)
+	}
+
+	eventID := sourceEvent.EventID + "-order"
+	envelope, err := json.Marshal(domain.EventEnvelope{
+		EventID:       eventID,
+		EventType:     eventType,
+		EventVersion:  1,
+		OccurredAt:    now,
+		AggregateID:   orderID,
+		CorrelationID: sourceEvent.CorrelationID,
+		CausationID:   sourceEvent.EventID,
+		TraceParent:   sourceEvent.TraceParent,
+		Payload:       payload,
+	})
+	if err != nil {
+		return fmt.Errorf("marshal order status event envelope: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, `
+		INSERT INTO outbox_events (
+			id, topic, event_key, event_type, payload, created_at
+		)
+		VALUES ($1,$2,$3,$4,$5::jsonb,$6)
+	`,
+		eventID,
+		ordersTopic,
+		orderID,
+		eventType,
+		envelope,
+		now,
+	)
+	if err != nil {
+		return fmt.Errorf("insert order status outbox event: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, `
+		INSERT INTO processed_events (event_id, event_type, processed_at)
+		VALUES ($1,$2,$3)
+	`, sourceEvent.EventID, sourceEvent.EventType, now)
+	if err != nil {
+		return fmt.Errorf("insert processed payment event: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit order status transaction: %w", err)
+	}
+	return nil
 }
 
 func (r *OrderRepository) GetByID(ctx context.Context, id string) (domain.Order, error) {
 	var order domain.Order
-
 	err := r.pool.QueryRow(ctx, `
-		SELECT
-			id,
-			customer_id,
-			status,
-			currency,
-			total_cents,
-			created_at,
-			updated_at
+		SELECT id, customer_id, status, currency, total_cents, created_at, updated_at
 		FROM orders
 		WHERE id = $1
 	`, id).Scan(
@@ -179,20 +287,12 @@ func (r *OrderRepository) GetByID(ctx context.Context, id string) (domain.Order,
 		return domain.Order{}, err
 	}
 	order.Items = items
-
 	return order, nil
 }
 
 func (r *OrderRepository) ListByCustomer(ctx context.Context, customerID string) ([]domain.Order, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT
-			id,
-			customer_id,
-			status,
-			currency,
-			total_cents,
-			created_at,
-			updated_at
+		SELECT id, customer_id, status, currency, total_cents, created_at, updated_at
 		FROM orders
 		WHERE customer_id = $1
 		ORDER BY created_at DESC
@@ -203,10 +303,8 @@ func (r *OrderRepository) ListByCustomer(ctx context.Context, customerID string)
 	defer rows.Close()
 
 	orders := make([]domain.Order, 0)
-
 	for rows.Next() {
 		var order domain.Order
-
 		if err := rows.Scan(
 			&order.ID,
 			&order.CustomerID,
@@ -218,10 +316,8 @@ func (r *OrderRepository) ListByCustomer(ctx context.Context, customerID string)
 		); err != nil {
 			return nil, fmt.Errorf("scan order: %w", err)
 		}
-
 		orders = append(orders, order)
 	}
-
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("iterate orders: %w", err)
 	}
@@ -233,16 +329,12 @@ func (r *OrderRepository) ListByCustomer(ctx context.Context, customerID string)
 		}
 		orders[i].Items = items
 	}
-
 	return orders, nil
 }
 
 func (r *OrderRepository) loadItems(ctx context.Context, orderID string) ([]domain.OrderItem, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT
-			product_id,
-			quantity,
-			unit_price_cents
+		SELECT product_id, quantity, unit_price_cents
 		FROM order_items
 		WHERE order_id = $1
 		ORDER BY line_number
@@ -253,23 +345,15 @@ func (r *OrderRepository) loadItems(ctx context.Context, orderID string) ([]doma
 	defer rows.Close()
 
 	items := make([]domain.OrderItem, 0)
-
 	for rows.Next() {
 		var item domain.OrderItem
-		if err := rows.Scan(
-			&item.ProductID,
-			&item.Quantity,
-			&item.UnitPriceCents,
-		); err != nil {
+		if err := rows.Scan(&item.ProductID, &item.Quantity, &item.UnitPriceCents); err != nil {
 			return nil, fmt.Errorf("scan order item: %w", err)
 		}
-
 		items = append(items, item)
 	}
-
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("iterate order items: %w", err)
 	}
-
 	return items, nil
 }
