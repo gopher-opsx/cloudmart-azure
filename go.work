@@ -4,4 +4,5 @@ use (
 	./services/catalog-service
 	./services/cart-service
 	./services/order-service
+	./services/inventory-service
 )

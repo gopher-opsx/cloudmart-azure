@@ -43,3 +43,9 @@ order-build: $(BIN_DIR)
 
 order-run: order-build
 	./$(BIN_DIR)/order-service.exe
+
+inventory-build:
+	go build -o bin/inventory-service.exe ./services/inventory-service/cmd/worker
+
+inventory-run: inventory-build
+	./bin/inventory-service.exe
