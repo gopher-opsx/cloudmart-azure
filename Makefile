@@ -1,5 +1,6 @@
 .PHONY: help status infra-up infra-ps go-cache app-ps app-stop health \
-	catalog-run cart-run order-run inventory-run payment-run notification-run bff-run bff-test
+	catalog-run cart-run order-run inventory-run payment-run notification-run bff-run bff-test \
+	storefront-run storefront-build storefront-test
 
 GO_IMAGE := golang:1.26.6
 DOCKER_NETWORK := docker_default
@@ -19,6 +20,9 @@ help:
 	@echo "  make notification-run Run Notification on :8086"
 	@echo "  make bff-run          Run Web BFF on :8080"
 	@echo "  make bff-test         Test Web BFF"
+	@echo "  make storefront-run   Run Angular storefront on :4200"
+	@echo "  make storefront-build Build Angular storefront"
+	@echo "  make storefront-test  Test Angular storefront once"
 	@echo "  make health           Check ports 8080-8086"
 	@echo "  make app-ps           Show application containers"
 	@echo "  make app-stop         Stop only application containers"
@@ -84,6 +88,15 @@ bff-run: go-cache
 bff-test: go-cache
 	MSYS_NO_PATHCONV=1 docker run --rm -e GOWORK=off $(GO_VOLUMES) \
 	  -w /workspace/services/web-bff $(GO_IMAGE) go test ./...
+
+storefront-run:
+	cd apps/storefront && npm start
+
+storefront-build:
+	cd apps/storefront && npm run build
+
+storefront-test:
+	cd apps/storefront && npm test -- --watch=false
 
 app-ps:
 	docker ps --filter ancestor=$(GO_IMAGE) --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
