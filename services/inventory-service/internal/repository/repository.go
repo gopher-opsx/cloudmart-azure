@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+
 	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/domain"
 )
 
 type InventoryRepository interface {
 	ReserveForOrder(context.Context, domain.EventEnvelope, domain.OrderCreatedPayload, string) error
+	ReleaseForOrder(context.Context, domain.EventEnvelope, domain.OrderCancelledPayload, string) error
 }
 
 type OutboxRepository interface {

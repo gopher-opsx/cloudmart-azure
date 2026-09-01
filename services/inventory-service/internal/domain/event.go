@@ -7,8 +7,10 @@ import (
 
 const (
 	OrderCreated      = "order.created"
+	OrderCancelled    = "order.cancelled"
 	InventoryReserved = "inventory.reserved"
 	InventoryRejected = "inventory.rejected"
+	InventoryReleased = "inventory.released"
 )
 
 type EventEnvelope struct {
@@ -40,6 +42,18 @@ type OrderCreatedPayload struct {
 type InventoryReservedPayload struct {
 	OrderID string      `json:"orderId"`
 	Items   []OrderItem `json:"items"`
+}
+
+type OrderCancelledPayload struct {
+	OrderID   string `json:"orderId"`
+	PaymentID string `json:"paymentId"`
+	Reason    string `json:"reason,omitempty"`
+}
+
+type InventoryReleasedPayload struct {
+	OrderID string      `json:"orderId"`
+	Items   []OrderItem `json:"items"`
+	Reason  string      `json:"reason,omitempty"`
 }
 type InventoryRejectedPayload struct {
 	OrderID string `json:"orderId"`
