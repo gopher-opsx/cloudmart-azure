@@ -2,15 +2,17 @@ package main
 
 import (
 	"context"
-	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/config"
-	kafkainfra "github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/infrastructure/kafka"
-	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/infrastructure/postgres"
-	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/outbox"
-	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/service"
 	"log"
 	"net/http"
 	"os/signal"
 	"syscall"
+
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/config"
+	kafkainfra "github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/infrastructure/kafka"
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/infrastructure/postgres"
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/metrics"
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/outbox"
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/service"
 )
 
 func main() {
@@ -30,6 +32,8 @@ func main() {
 	defer consumer.Close()
 	go consumer.Run(ctx)
 	mux := http.NewServeMux()
+	metricCollector := metrics.New("inventory-service")
+	mux.Handle("/metrics", metricCollector.Handler())
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
@@ -42,7 +46,7 @@ func main() {
 		w.WriteHeader(200)
 		_, _ = w.Write([]byte("ready"))
 	})
-	s := &http.Server{Addr: cfg.HTTPAddr, Handler: mux}
+	s := &http.Server{Addr: cfg.HTTPAddr, Handler: metricCollector.Middleware(mux)}
 	go func() {
 		log.Printf("inventory-service listening on %s", cfg.HTTPAddr)
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {

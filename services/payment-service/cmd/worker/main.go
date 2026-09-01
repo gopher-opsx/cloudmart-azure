@@ -13,6 +13,7 @@ import (
 	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/config"
 	kafkainfra "github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/infrastructure/kafka"
 	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/infrastructure/postgres"
+	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/outbox"
 	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/service"
 )
@@ -45,6 +46,8 @@ func main() {
 	go kafkaConsumer.Run(ctx)
 
 	mux := http.NewServeMux()
+	metricCollector := metrics.New("payment-service")
+	mux.Handle("/metrics", metricCollector.Handler())
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
@@ -58,7 +61,7 @@ func main() {
 		_, _ = w.Write([]byte("ready"))
 	})
 
-	server := &http.Server{Addr: cfg.HTTPAddr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: cfg.HTTPAddr, Handler: metricCollector.Middleware(mux), ReadHeaderTimeout: 5 * time.Second}
 	serverErrors := make(chan error, 1)
 
 	go func() {

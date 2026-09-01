@@ -14,6 +14,7 @@ import (
 
 	"github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/config"
 	redisrepo "github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/infrastructure/redis"
+	"github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/service"
 	httptransport "github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/transport/http"
 )
@@ -40,6 +41,8 @@ func main() {
 	cartHandler := httptransport.NewCartHandler(cartService)
 
 	mux := http.NewServeMux()
+	metricCollector := metrics.New("cart-service")
+	mux.Handle("/metrics", metricCollector.Handler())
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -64,7 +67,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           mux,
+		Handler:           metricCollector.Middleware(mux),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

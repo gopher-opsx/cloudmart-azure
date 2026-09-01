@@ -11,6 +11,7 @@ import (
 
 	"github.com/gopher-opsx/cloudmart-azure/services/web-bff/internal/config"
 	"github.com/gopher-opsx/cloudmart-azure/services/web-bff/internal/httpapi"
+	"github.com/gopher-opsx/cloudmart-azure/services/web-bff/internal/metrics"
 )
 
 func main() {
@@ -19,9 +20,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	appHandler := handler.Routes()
+	metricCollector := metrics.New("web-bff")
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", metricCollector.Handler())
+	mux.Handle("/", appHandler)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	server := &http.Server{Addr: cfg.HTTPAddr, Handler: handler.Routes(), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: cfg.HTTPAddr, Handler: metricCollector.Middleware(mux), ReadHeaderTimeout: 5 * time.Second}
 	errorsCh := make(chan error, 1)
 	go func() { log.Printf("web-bff listening on %s", cfg.HTTPAddr); errorsCh <- server.ListenAndServe() }()
 	select {

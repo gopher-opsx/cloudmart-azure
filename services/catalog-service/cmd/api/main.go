@@ -8,6 +8,7 @@ import (
 
 	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/config"
 	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/infrastructure/postgres"
+	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/service"
 	httptransport "github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/transport/http"
 )
@@ -28,6 +29,8 @@ func main() {
 	catalogHandler := httptransport.NewCatalogHandler(catalogService)
 
 	mux := http.NewServeMux()
+	metricCollector := metrics.New("catalog-service")
+	mux.Handle("/metrics", metricCollector.Handler())
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -49,7 +52,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    cfg.HTTPAddr,
-		Handler: mux,
+		Handler: metricCollector.Middleware(mux),
 	}
 
 	log.Printf("catalog-service listening on %s", cfg.HTTPAddr)

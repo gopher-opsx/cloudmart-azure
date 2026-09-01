@@ -8,7 +8,7 @@
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
       "id": 1,
       "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
-      "targets": [{"expr": "sum by (service_name) (rate(http_server_request_duration_seconds_count[5m]))", "legendFormat": "{{service_name}}"}],
+      "targets": [{"expr": "sum by (service) (rate(http_server_requests_total[5m]))", "legendFormat": "{{service}}"}],
       "title": "HTTP request rate",
       "type": "timeseries"
     },
@@ -18,18 +18,38 @@
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
       "id": 2,
       "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
-      "targets": [{"expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(http_server_request_duration_seconds_bucket[5m])))", "legendFormat": "{{service_name}}"}],
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le, service) (rate(http_server_request_duration_seconds_bucket[5m])))", "legendFormat": "{{service}}"}],
       "title": "HTTP p95 latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "id": 3,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [{"expr": "sum by (service, status_code) (increase(http_server_requests_total[5m]))", "legendFormat": "{{service}} {{status_code}}"}],
+      "title": "Responses by status (5 minutes)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "id": 4,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [{"expr": "sum by (service) (rate(http_server_requests_total{status_code=~\"5..\"}[5m])) / clamp_min(sum by (service) (rate(http_server_requests_total[5m])), 0.000001)", "legendFormat": "{{service}}"}],
+      "title": "HTTP 5xx error ratio",
       "type": "timeseries"
     }
   ],
-  "refresh": "10s",
+  "refresh": "5s",
   "schemaVersion": 41,
-  "tags": ["cloudmart", "opentelemetry"],
+  "tags": ["cloudmart", "prometheus"],
   "templating": {"list": []},
-  "time": {"from": "now-30m", "to": "now"},
+  "time": {"from": "now-15m", "to": "now"},
   "timezone": "browser",
   "title": "CloudMart Overview",
   "uid": "cloudmart-overview",
-  "version": 1
+  "version": 2
 }
