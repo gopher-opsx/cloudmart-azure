@@ -1,6 +1,7 @@
 .PHONY: help status infra-up infra-ps go-cache app-ps app-stop health \
 	catalog-run cart-run order-run inventory-run payment-run notification-run bff-run bff-test \
-	storefront-run storefront-build storefront-test
+	storefront-run storefront-build storefront-test \
+	compose-local-build compose-local-up compose-local-ps compose-local-logs compose-local-smoke compose-local-down
 
 GO_IMAGE := golang:1.26.6
 DOCKER_NETWORK := docker_default
@@ -23,6 +24,10 @@ help:
 	@echo "  make storefront-run   Run Angular storefront on :4200"
 	@echo "  make storefront-build Build Angular storefront"
 	@echo "  make storefront-test  Test Angular storefront once"
+	@echo "  make compose-local-up  Build and start the complete stack"
+	@echo "  make compose-local-ps  Show complete stack status"
+	@echo "  make compose-local-smoke Test both Saga paths"
+	@echo "  make compose-local-down Stop the complete stack"
 	@echo "  make health           Check ports 8080-8086"
 	@echo "  make app-ps           Show application containers"
 	@echo "  make app-stop         Stop only application containers"
@@ -97,6 +102,24 @@ storefront-build:
 
 storefront-test:
 	cd apps/storefront && npm test -- --watch=false
+
+compose-local-build:
+	docker compose -f platform/docker/compose.yaml build
+
+compose-local-up:
+	docker compose -f platform/docker/compose.yaml up -d --build --wait
+
+compose-local-ps:
+	docker compose -f platform/docker/compose.yaml ps
+
+compose-local-logs:
+	docker compose -f platform/docker/compose.yaml logs -f --tail=100
+
+compose-local-smoke:
+	sh scripts/smoke-local.sh
+
+compose-local-down:
+	docker compose -f platform/docker/compose.yaml down
 
 app-ps:
 	docker ps --filter ancestor=$(GO_IMAGE) --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
