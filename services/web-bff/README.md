@@ -1,14 +1,16 @@
 # CloudMart Web BFF
 
-Browser-facing API gateway for the CloudMart storefront. It exposes a single origin on port `8080`, routes product requests to Catalog, cart requests to Cart, and order requests to Order Service, while forwarding customer and tracing headers.
+Browser-facing Backend for Frontend on port `8080`. It gives the Angular storefront one API origin while keeping internal service addresses private.
 
-## Endpoints
+## Routing
 
-- `GET /healthz`
-- `GET /readyz` (Catalog, Cart, and Order readiness)
-- `/api/products...` → Catalog Service
-- `/api/cart...` → Cart Service
-- `/api/orders...` → Order Service
+- `/api/products...` -> Catalog Service
+- `/api/cart...` -> Cart Service
+- `/api/orders...` -> Order Service
+- `GET /healthz` -> process liveness
+- `GET /readyz` -> Catalog, Cart, and Order readiness
+
+The BFF forwards content negotiation, `X-Customer-ID`, and W3C `traceparent` headers. It also provides development CORS policy for `http://localhost:4200`.
 
 ## Configuration
 
@@ -19,3 +21,5 @@ Browser-facing API gateway for the CloudMart storefront. It exposes a single ori
 | `CART_SERVICE_URL` | `http://localhost:8082` |
 | `ORDER_SERVICE_URL` | `http://localhost:8083` |
 | `ALLOWED_ORIGIN` | `http://localhost:4200` |
+
+Run with `make bff-run`, test with `make bff-test`, or use the complete Compose stack.

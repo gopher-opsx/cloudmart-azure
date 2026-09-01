@@ -1,18 +1,23 @@
 # Payment Service
 
-CloudMart Payment Service is an event-driven worker.
+Kafka worker that simulates payment authorization and stores results in PostgreSQL `payments_db`.
 
-It consumes `inventory.reserved` from Kafka, simulates authorization, persists the result in PostgreSQL, records processed event IDs for idempotency, and writes an outgoing event to a transactional outbox.
+Consumes `inventory.reserved` from `inventory`. Produces `payment.authorized` or `payment.failed` to `payments` through a transactional outbox. Processed event IDs provide idempotency.
 
-It emits `payment.authorized` or `payment.failed` to the `payments` Kafka topic.
+## Training rule
 
-Local defaults:
-- HTTP: `:8085`
-- PostgreSQL: `payments_db`
-- Kafka: `localhost:9092`
-- Consumer topic: `inventory`
-- Consumer group: `payment-service`
-- Producer topic: `payments`
-- Authorization ceiling: `500000` cents
+Orders with totals at or below `PAYMENT_MAX_AUTH_CENTS` authorize. Larger totals fail deterministically, allowing both Saga paths without an external payment provider.
 
-Simulation rule: authorize when total <= PAYMENT_MAX_AUTH_CENTS, otherwise fail.
+## Configuration
+
+| Variable | Default |
+|---|---|
+| `HTTP_ADDR` | `:8085` |
+| `DATABASE_URL` | local `payments_db` |
+| `KAFKA_BROKERS` | `localhost:9092` |
+| `INVENTORY_TOPIC` | `inventory` |
+| `PAYMENTS_TOPIC` | `payments` |
+| `KAFKA_CONSUMER_GROUP` | `payment-service` |
+| `PAYMENT_MAX_AUTH_CENTS` | `500000` |
+
+Run with `make payment-run` or as part of `make compose-local-up`.

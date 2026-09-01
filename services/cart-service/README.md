@@ -1,22 +1,6 @@
 # Cart Service
 
-Redis-backed shopping cart service for CloudMart.
-
-## Local defaults
-
-- HTTP: `:8082`
-- Redis: `localhost:6379`
-- Cart TTL: `24h`
-
-## Customer identity during local development
-
-Until the Web BFF/OIDC layer is added, requests identify the customer with:
-
-```text
-X-Customer-ID: customer-001
-```
-
-The BFF will own customer identity propagation later.
+Redis-backed shopping-cart API with a default 24-hour TTL.
 
 ## Endpoints
 
@@ -27,3 +11,17 @@ The BFF will own customer identity propagation later.
 - `PATCH /cart/items/{productId}`
 - `DELETE /cart/items/{productId}`
 - `DELETE /cart`
+
+Cart routes require `X-Customer-ID`. The storefront sends it to the BFF, which forwards it to this service.
+
+## Configuration
+
+| Variable | Default |
+|---|---|
+| `HTTP_ADDR` | `:8082` |
+| `REDIS_ADDR` | `localhost:6379` |
+| `REDIS_PASSWORD` | empty |
+| `REDIS_DB` | `0` |
+| `CART_TTL` | `24h` |
+
+Run with `make cart-run` or as part of `make compose-local-up`.
