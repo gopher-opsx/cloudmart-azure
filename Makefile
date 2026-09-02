@@ -1,7 +1,8 @@
 .PHONY: help status infra-up infra-ps go-cache app-ps app-stop health \
 	catalog-run cart-run order-run inventory-run payment-run notification-run bff-run bff-test \
 	storefront-run storefront-build storefront-test \
-	compose-local-build compose-local-up compose-local-ps compose-local-logs compose-local-smoke compose-local-down
+	compose-local-build compose-local-up compose-local-ps compose-local-logs compose-local-smoke compose-local-down \
+	ci-go ci-frontend ci-compose ci-local
 
 GO_IMAGE := golang:1.26.6
 DOCKER_NETWORK := docker_default
@@ -31,6 +32,7 @@ help:
 	@echo "  make health           Check ports 8080-8086"
 	@echo "  make app-ps           Show application containers"
 	@echo "  make app-stop         Stop only application containers"
+	@echo "  make ci-local         Run local CI validation"
 	@echo "  make status           Show Git status"
 
 status:
@@ -137,3 +139,24 @@ health:
 	@for port in 8080 8081 8082 8083 8084 8085 8086; do \
 	  printf "port %s: " "$$port"; curl -fsS "http://localhost:$$port/healthz" || true; echo; \
 	done
+
+
+CI_SERVICES := catalog-service cart-service order-service inventory-service payment-service notification-service web-bff
+
+ci-go: go-cache
+	@for service in $(CI_SERVICES); do \
+	  echo "Testing $$service"; \
+	  MSYS_NO_PATHCONV=1 docker run --rm -e GOWORK=off $(GO_VOLUMES) \
+	    -w /workspace/services/$$service $(GO_IMAGE) go test ./... || exit 1; \
+	done
+
+ci-frontend:
+	cd apps/storefront && npm ci
+	cd apps/storefront && npm test -- --watch=false
+	cd apps/storefront && npm run build
+
+ci-compose:
+	docker compose -f platform/docker/compose.yaml -f platform/docker/compose.observability.yaml config --quiet
+
+ci-local: ci-go ci-frontend ci-compose
+	@echo "CloudMart local CI passed"
