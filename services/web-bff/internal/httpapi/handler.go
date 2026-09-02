@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Handler struct {
@@ -29,7 +31,7 @@ func New(catalogURL, cartURL, orderURL, allowedOrigin string) (*Handler, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &Handler{catalog: catalog, cart: cart, order: order, allowedOrigin: allowedOrigin, client: &http.Client{Timeout: 10 * time.Second}}, nil
+	return &Handler{catalog: catalog, cart: cart, order: order, allowedOrigin: allowedOrigin, client: &http.Client{Timeout: 10 * time.Second, Transport: otelhttp.NewTransport(http.DefaultTransport)}}, nil
 }
 
 func (h *Handler) Routes() http.Handler {

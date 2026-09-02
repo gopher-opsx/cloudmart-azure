@@ -16,11 +16,18 @@ import (
 	redisrepo "github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/infrastructure/redis"
 	"github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/service"
+	"github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/telemetry"
 	httptransport "github.com/gopher-opsx/cloudmart-azure/services/cart-service/internal/transport/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
 	cfg := config.Load()
+	shutdownTelemetry, err := telemetry.Start(context.Background(), "cart-service")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = shutdownTelemetry(context.Background()) }()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -67,7 +74,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           metricCollector.Middleware(mux),
+		Handler:           otelhttp.NewHandler(metricCollector.Middleware(mux), "cart-service.http"),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

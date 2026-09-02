@@ -12,10 +12,17 @@ import (
 	"github.com/gopher-opsx/cloudmart-azure/services/web-bff/internal/config"
 	"github.com/gopher-opsx/cloudmart-azure/services/web-bff/internal/httpapi"
 	"github.com/gopher-opsx/cloudmart-azure/services/web-bff/internal/metrics"
+	"github.com/gopher-opsx/cloudmart-azure/services/web-bff/internal/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
 	cfg := config.Load()
+	shutdownTelemetry, err := telemetry.Start(context.Background(), "web-bff")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = shutdownTelemetry(context.Background()) }()
 	handler, err := httpapi.New(cfg.CatalogURL, cfg.CartURL, cfg.OrderURL, cfg.AllowedOrigin)
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +34,7 @@ func main() {
 	mux.Handle("/", appHandler)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	server := &http.Server{Addr: cfg.HTTPAddr, Handler: metricCollector.Middleware(mux), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: cfg.HTTPAddr, Handler: otelhttp.NewHandler(metricCollector.Middleware(mux), "web-bff.http"), ReadHeaderTimeout: 5 * time.Second}
 	errorsCh := make(chan error, 1)
 	go func() { log.Printf("web-bff listening on %s", cfg.HTTPAddr); errorsCh <- server.ListenAndServe() }()
 	select {

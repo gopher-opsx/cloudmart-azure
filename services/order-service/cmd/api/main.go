@@ -16,11 +16,18 @@ import (
 	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/outbox"
 	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/service"
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/telemetry"
 	httptransport "github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/transport/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
 	cfg := config.Load()
+	shutdownTelemetry, err := telemetry.Start(context.Background(), "order-service")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = shutdownTelemetry(context.Background()) }()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -83,7 +90,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           metricCollector.Middleware(mux),
+		Handler:           otelhttp.NewHandler(metricCollector.Middleware(mux), "order-service.http"),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

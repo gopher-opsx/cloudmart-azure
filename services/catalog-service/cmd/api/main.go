@@ -10,11 +10,18 @@ import (
 	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/infrastructure/postgres"
 	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/service"
+	"github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/telemetry"
 	httptransport "github.com/gopher-opsx/cloudmart-azure/services/catalog-service/internal/transport/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
 	cfg := config.Load()
+	shutdownTelemetry, err := telemetry.Start(context.Background(), "catalog-service")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = shutdownTelemetry(context.Background()) }()
 
 	ctx := context.Background()
 
@@ -52,7 +59,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    cfg.HTTPAddr,
-		Handler: metricCollector.Middleware(mux),
+		Handler: otelhttp.NewHandler(metricCollector.Middleware(mux), "catalog-service.http"),
 	}
 
 	log.Printf("catalog-service listening on %s", cfg.HTTPAddr)
