@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/domain"
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/repository"
 )
 
@@ -25,7 +26,11 @@ func (s *InventoryService) HandleEvent(ctx context.Context, e domain.EventEnvelo
 		if err := json.Unmarshal(e.Payload, &order); err != nil {
 			return fmt.Errorf("decode order.created: %w", err)
 		}
-		return s.repo.ReserveForOrder(ctx, e, order, s.topic)
+		err := s.repo.ReserveForOrder(ctx, e, order, s.topic)
+		if err == nil {
+			metrics.IncBusiness("cloudmart_inventory_reserved_total")
+		}
+		return err
 	case domain.OrderCancelled:
 		var order domain.OrderCancelledPayload
 		if err := json.Unmarshal(e.Payload, &order); err != nil {
@@ -34,7 +39,11 @@ func (s *InventoryService) HandleEvent(ctx context.Context, e domain.EventEnvelo
 		if order.OrderID == "" {
 			order.OrderID = e.AggregateID
 		}
-		return s.repo.ReleaseForOrder(ctx, e, order, s.topic)
+		err := s.repo.ReleaseForOrder(ctx, e, order, s.topic)
+		if err == nil {
+			metrics.IncBusiness("cloudmart_inventory_released_total")
+		}
+		return err
 	default:
 		return nil
 	}

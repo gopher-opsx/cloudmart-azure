@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/domain"
-	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
 	"testing"
 	"time"
+
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/domain"
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
 )
 
 type fakeOrderRepository struct{ created domain.Order }
@@ -40,4 +41,16 @@ func TestCreateOrderRejectsEmptyItems(t *testing.T) {
 	if !errors.Is(e, ErrItemsRequired) {
 		t.Fatalf("expected ErrItemsRequired, got %v", e)
 	}
+}
+
+func (r *fakeOrderRepository) ApplyPaymentEvent(
+	context.Context,
+	domain.EventEnvelope,
+	string,
+	string,
+	domain.OrderStatus,
+	string,
+	string,
+) error {
+	return nil
 }

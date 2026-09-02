@@ -2,13 +2,14 @@ package httptransport
 
 import (
 	"context"
-	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/domain"
-	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
-	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/service"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/domain"
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/service"
 )
 
 type handlerOrderRepository struct{ order domain.Order }
@@ -47,4 +48,16 @@ func TestCreateOrderReturnsCreated(t *testing.T) {
 	if w.Code != 201 {
 		t.Fatalf("expected 201 got %d body=%s", w.Code, w.Body.String())
 	}
+}
+
+func (r *handlerOrderRepository) ApplyPaymentEvent(
+	context.Context,
+	domain.EventEnvelope,
+	string,
+	string,
+	domain.OrderStatus,
+	string,
+	string,
+) error {
+	return nil
 }

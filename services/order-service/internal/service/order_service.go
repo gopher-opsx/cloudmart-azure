@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/domain"
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
 )
 
@@ -89,7 +90,11 @@ func (s *OrderService) CreateOrder(ctx context.Context, input CreateOrderInput) 
 		UpdatedAt:  now,
 	}
 
-	return s.orders.Create(ctx, order)
+	created, err := s.orders.Create(ctx, order)
+	if err == nil {
+		metrics.IncBusiness("cloudmart_orders_created_total")
+	}
+	return created, err
 }
 
 func (s *OrderService) GetOrder(ctx context.Context, id string) (domain.Order, error) {

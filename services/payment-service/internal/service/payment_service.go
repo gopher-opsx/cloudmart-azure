@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/domain"
+	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/payment-service/internal/repository"
 )
 
@@ -79,7 +80,15 @@ func (s *PaymentService) HandleEvent(ctx context.Context, envelope domain.EventE
 		UpdatedAt:     now,
 	}
 
-	return s.payments.ProcessPayment(ctx, envelope, payment, decision, s.paymentsTopic)
+	err = s.payments.ProcessPayment(ctx, envelope, payment, decision, s.paymentsTopic)
+	if err == nil {
+		if decision.Authorized {
+			metrics.IncBusiness("cloudmart_payments_authorized_total")
+		} else {
+			metrics.IncBusiness("cloudmart_payments_failed_total")
+		}
+	}
+	return err
 }
 
 func generatePaymentID() (string, error) {

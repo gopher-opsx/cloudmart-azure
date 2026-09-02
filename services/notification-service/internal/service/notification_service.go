@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gopher-opsx/cloudmart-azure/services/notification-service/internal/domain"
+	"github.com/gopher-opsx/cloudmart-azure/services/notification-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/notification-service/internal/repository"
 )
 
@@ -53,7 +54,10 @@ func (s *NotificationService) HandleEvent(ctx context.Context, event domain.Even
 		n.Body = fmt.Sprintf("Order %s was cancelled. Reason: %s.", payload.OrderID, fallback(payload.Reason, "payment could not be completed"))
 	}
 
-	_, err := s.repository.StoreDelivered(ctx, event, n)
+	created, err := s.repository.StoreDelivered(ctx, event, n)
+	if err == nil && created {
+		metrics.IncBusiness("cloudmart_notifications_delivered_total")
+	}
 	return err
 }
 

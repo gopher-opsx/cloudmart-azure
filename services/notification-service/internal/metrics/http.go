@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+var businessCounters = struct {
+	mu     sync.RWMutex
+	values map[string]uint64
+}{values: make(map[string]uint64)}
+
 var buckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5}
 
 type key struct {
@@ -33,6 +38,12 @@ type Collector struct {
 
 func New(service string) *Collector {
 	return &Collector{service: service, values: make(map[key]*observation)}
+}
+
+func IncBusiness(name string) {
+	businessCounters.mu.Lock()
+	businessCounters.values[name]++
+	businessCounters.mu.Unlock()
 }
 
 func (c *Collector) Middleware(next http.Handler) http.Handler {
@@ -111,6 +122,18 @@ func (c *Collector) write(w io.Writer) {
 		fmt.Fprintf(w, "http_server_request_duration_seconds_sum%s %.9f\n", c.labels(k, ""), value.sum)
 		fmt.Fprintf(w, "http_server_request_duration_seconds_count%s %d\n", c.labels(k, ""), value.count)
 	}
+	businessCounters.mu.RLock()
+	businessNames := make([]string, 0, len(businessCounters.values))
+	for name := range businessCounters.values {
+		businessNames = append(businessNames, name)
+	}
+	sort.Strings(businessNames)
+	for _, name := range businessNames {
+		fmt.Fprintf(w, "# HELP %s CloudMart business events successfully processed.\n", name)
+		fmt.Fprintf(w, "# TYPE %s counter\n", name)
+		fmt.Fprintf(w, "%s{service=\"%s\"} %d\n", name, escape(c.service), businessCounters.values[name])
+	}
+	businessCounters.mu.RUnlock()
 }
 
 func (c *Collector) labels(k key, le string) string {
@@ -127,8 +150,8 @@ func (c *Collector) labels(k key, le string) string {
 }
 
 func escape(value string) string {
-	value = strings.ReplaceAll(value, "\\", "\\\\")
-	value = strings.ReplaceAll(value, "\n", "\\n")
+	value = strings.ReplaceAll(value, "\\", "\\")
+	value = strings.ReplaceAll(value, "\n", "\n")
 	return strings.ReplaceAll(value, `"`, `\\"`)
 }
 

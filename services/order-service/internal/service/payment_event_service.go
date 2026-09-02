@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/domain"
+	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/order-service/internal/repository"
 )
 
@@ -37,7 +38,7 @@ func (s *PaymentEventService) HandleEvent(
 		if err := json.Unmarshal(envelope.Payload, &payload); err != nil {
 			return fmt.Errorf("decode payment.authorized payload: %w", err)
 		}
-		return s.orders.ApplyPaymentEvent(
+		err := s.orders.ApplyPaymentEvent(
 			ctx,
 			envelope,
 			payload.OrderID,
@@ -46,13 +47,17 @@ func (s *PaymentEventService) HandleEvent(
 			"",
 			s.ordersTopic,
 		)
+		if err == nil {
+			metrics.IncBusiness("cloudmart_orders_confirmed_total")
+		}
+		return err
 
 	case domain.PaymentFailedEventType:
 		var payload domain.PaymentFailedPayload
 		if err := json.Unmarshal(envelope.Payload, &payload); err != nil {
 			return fmt.Errorf("decode payment.failed payload: %w", err)
 		}
-		return s.orders.ApplyPaymentEvent(
+		err := s.orders.ApplyPaymentEvent(
 			ctx,
 			envelope,
 			payload.OrderID,
@@ -61,6 +66,10 @@ func (s *PaymentEventService) HandleEvent(
 			payload.Reason,
 			s.ordersTopic,
 		)
+		if err == nil {
+			metrics.IncBusiness("cloudmart_orders_cancelled_total")
+		}
+		return err
 
 	default:
 		return ErrUnsupportedPaymentEvent
