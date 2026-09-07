@@ -1,0 +1,6 @@
+location = "eastus"
+resource_group_name = "rg-cloudmart-training-eastus"
+acr_name = "<globally-unique-acr-name>"
+key_vault_name = "<globally-unique-kv-name>"
+postgres_admin_username = "cloudmartadmin"
+# Never commit passwords or connection strings here.

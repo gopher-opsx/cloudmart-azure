@@ -1,0 +1,4 @@
+resource_group_name  = "rg-cloudmart-tfstate-eastus"
+storage_account_name = "<globally-unique-storage-account>"
+container_name       = "tfstate"
+key                  = "cloudmart/training/terraform.tfstate"
