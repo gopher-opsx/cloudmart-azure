@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"
 
 require_cmd git
 require_cmd docker
-if [[ -f "$ROOT/platform/images/release.env" ]]; then
-  # shellcheck disable=SC1091
-  source "$ROOT/platform/images/release.env"
-fi
-require_env ACR_LOGIN_SERVER
 
-SHORT_SHA="$(git -C "$ROOT" rev-parse --short=12 HEAD)"
-SHA_TAG="sha-${SHORT_SHA}"
-VERSION_TAG="${RELEASE_VERSION:-1.0.0}"
+RELEASE_ENV="$ROOT/platform/images/release.env"
+[[ -f "$RELEASE_ENV" ]] || fail "missing $RELEASE_ENV (copy release.env.example and populate it first)"
+# shellcheck disable=SC1090
+source "$RELEASE_ENV"
+
+require_env CLOUDMART_ACR_LOGIN_SERVER
+require_env CLOUDMART_IMAGE_VERSION
+require_env CLOUDMART_GIT_SHA
+require_env CLOUDMART_SHA_TAG
+
+CURRENT_SHA="$(git -C "$ROOT" rev-parse HEAD)"
+[[ "$CURRENT_SHA" == "$CLOUDMART_GIT_SHA" ]] || \
+  fail "release.env Git SHA does not match the current checkout; regenerate release metadata before publishing"
 
 components=(
   "storefront|cloudmart/storefront|apps/storefront/Dockerfile"
@@ -26,20 +32,27 @@ components=(
   "notification-service|cloudmart/notification-service|services/notification-service/Dockerfile"
 )
 
-info "Building CloudMart release $VERSION_TAG / $SHA_TAG"
+info "Building CloudMart ${CLOUDMART_IMAGE_VERSION} from ${CLOUDMART_GIT_SHA}"
+info "Registry: ${CLOUDMART_ACR_LOGIN_SERVER}"
+
 for item in "${components[@]}"; do
-  IFS='|' read -r component repo dockerfile <<<"$item"
-  image="$ACR_LOGIN_SERVER/$repo"
+  IFS='|' read -r component repository dockerfile <<<"$item"
+  image="${CLOUDMART_ACR_LOGIN_SERVER}/${repository}"
+
+  [[ -f "$ROOT/$dockerfile" ]] || fail "Dockerfile not found: $dockerfile"
+
   info "[$component] build + push"
   docker buildx build \
     --platform linux/amd64 \
     --file "$ROOT/$dockerfile" \
-    --label "org.opencontainers.image.revision=$(git -C "$ROOT" rev-parse HEAD)" \
-    --label "org.opencontainers.image.version=$VERSION_TAG" \
-    --tag "$image:$VERSION_TAG" \
-    --tag "$image:$SHA_TAG" \
+    --label "org.opencontainers.image.revision=${CLOUDMART_GIT_SHA}" \
+    --label "org.opencontainers.image.version=${CLOUDMART_IMAGE_VERSION}" \
+    --tag "${image}:${CLOUDMART_IMAGE_VERSION}" \
+    --tag "${image}:${CLOUDMART_SHA_TAG}" \
     --push \
     "$ROOT"
+
   pass "$component published"
 done
-printf 'RELEASE_VERSION=%s\nSHORT_SHA=%s\nSHA_TAG=%s\n' "$VERSION_TAG" "$SHORT_SHA" "$SHA_TAG"
+
+pass "CloudMart release ${CLOUDMART_IMAGE_VERSION} published with tag ${CLOUDMART_SHA_TAG}"

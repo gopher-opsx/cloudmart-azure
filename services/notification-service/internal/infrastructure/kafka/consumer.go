@@ -20,7 +20,7 @@ type Consumer struct {
 }
 
 func NewConsumer(brokers []string, topic, groupID string, handler EventHandler) *Consumer {
-	return &Consumer{reader: kafkago.NewReader(kafkago.ReaderConfig{Brokers: brokers, Topic: topic, GroupID: groupID, MinBytes: 1, MaxBytes: 10e6, CommitInterval: 0}), handler: handler}
+	return &Consumer{reader: kafkago.NewReader(kafkago.ReaderConfig{Brokers: brokers, Dialer: newKafkaDialer(), Topic: topic, GroupID: groupID, MinBytes: 1, MaxBytes: 10e6, CommitInterval: 0}), handler: handler}
 }
 
 func (c *Consumer) Run(ctx context.Context) {

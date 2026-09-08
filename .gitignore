@@ -38,6 +38,12 @@ docker-data/
 crash.log
 *.tfvars
 !*.tfvars.example
+*.tfbackend
+!*.tfbackend.example
+
+# Course-local release metadata
+platform/images/release.env
+release-manifest.json
 
 # Temporary files
 tmp/

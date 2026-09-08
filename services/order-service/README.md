@@ -25,8 +25,17 @@ The transactional outbox prevents database state and Kafka publication from dive
 | `HTTP_ADDR` | `:8083` |
 | `DATABASE_URL` | local `orders_db` |
 | `KAFKA_BROKERS` | `localhost:9092` |
+| `KAFKA_SECURITY_PROTOCOL` | `PLAINTEXT` |
+| `KAFKA_SASL_MECHANISM` | `PLAIN` |
+| `KAFKA_SASL_USERNAME` | empty |
+| `KAFKA_SASL_PASSWORD` | empty |
 | `ORDERS_TOPIC` | `orders` |
 | `PAYMENTS_TOPIC` | `payments` |
 | `PAYMENTS_CONSUMER_GROUP` | `order-service-payments` |
 
 Run with `make order-run` or as part of `make compose-local-up`.
+
+
+### Azure Event Hubs Kafka endpoint
+
+Keep the local defaults for Docker Compose. For Azure Event Hubs, use `KAFKA_SECURITY_PROTOCOL=SASL_SSL` and `KAFKA_SASL_MECHANISM=PLAIN`. Set `KAFKA_SASL_USERNAME` to `$ConnectionString` and provide the Event Hubs namespace connection string through `KAFKA_SASL_PASSWORD`. TLS certificate verification remains enabled and requires TLS 1.2 or newer.

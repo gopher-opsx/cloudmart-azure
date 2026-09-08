@@ -16,6 +16,7 @@ func NewPublisher(brokers []string) *Publisher {
 	return &Publisher{
 		writer: &kafkago.Writer{
 			Addr:                   kafkago.TCP(brokers...),
+			Transport:              newKafkaTransport(),
 			Balancer:               &kafkago.Hash{},
 			RequiredAcks:           kafkago.RequireAll,
 			AllowAutoTopicCreation: false,

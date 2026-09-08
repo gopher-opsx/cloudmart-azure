@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/domain"
-	kafkago "github.com/segmentio/kafka-go"
 	"log"
 	"time"
+
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/domain"
+	kafkago "github.com/segmentio/kafka-go"
 )
 
 type Handler interface {
@@ -20,7 +21,7 @@ type Consumer struct {
 }
 
 func NewConsumer(b []string, topic, group string, h Handler) *Consumer {
-	return &Consumer{r: kafkago.NewReader(kafkago.ReaderConfig{Brokers: b, Topic: topic, GroupID: group, CommitInterval: 0}), h: h}
+	return &Consumer{r: kafkago.NewReader(kafkago.ReaderConfig{Brokers: b, Dialer: newKafkaDialer(), Topic: topic, GroupID: group, CommitInterval: 0}), h: h}
 }
 func (c *Consumer) Run(ctx context.Context) {
 	for {
@@ -53,7 +54,7 @@ func (c *Consumer) Close() error { return c.r.Close() }
 type Publisher struct{ w *kafkago.Writer }
 
 func NewPublisher(b []string) *Publisher {
-	return &Publisher{w: &kafkago.Writer{Addr: kafkago.TCP(b...), Balancer: &kafkago.Hash{}, RequiredAcks: kafkago.RequireAll, AllowAutoTopicCreation: false, BatchTimeout: 10 * time.Millisecond}}
+	return &Publisher{w: &kafkago.Writer{Addr: kafkago.TCP(b...), Transport: newKafkaTransport(), Balancer: &kafkago.Hash{}, RequiredAcks: kafkago.RequireAll, AllowAutoTopicCreation: false, BatchTimeout: 10 * time.Millisecond}}
 }
 func (p *Publisher) Publish(ctx context.Context, topic, key string, payload []byte) error {
 	return p.w.WriteMessages(ctx, kafkago.Message{Topic: topic, Key: []byte(key), Value: payload, Time: time.Now().UTC()})

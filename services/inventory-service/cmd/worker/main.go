@@ -13,10 +13,17 @@ import (
 	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/outbox"
 	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/service"
+	"github.com/gopher-opsx/cloudmart-azure/services/inventory-service/internal/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
 	cfg := config.Load()
+	shutdownTelemetry, err := telemetry.Start(context.Background(), "inventory-service")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = shutdownTelemetry(context.Background()) }()
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	db, err := postgres.NewPool(ctx, cfg.DatabaseURL)
@@ -46,7 +53,7 @@ func main() {
 		w.WriteHeader(200)
 		_, _ = w.Write([]byte("ready"))
 	})
-	s := &http.Server{Addr: cfg.HTTPAddr, Handler: metricCollector.Middleware(mux)}
+	s := &http.Server{Addr: cfg.HTTPAddr, Handler: otelhttp.NewHandler(metricCollector.Middleware(mux), "inventory-service.http")}
 	go func() {
 		log.Printf("inventory-service listening on %s", cfg.HTTPAddr)
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {

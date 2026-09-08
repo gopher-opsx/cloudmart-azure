@@ -29,6 +29,7 @@ func NewPaymentConsumer(
 	return &PaymentConsumer{
 		reader: kafkago.NewReader(kafkago.ReaderConfig{
 			Brokers:        brokers,
+			Dialer:         newKafkaDialer(),
 			Topic:          topic,
 			GroupID:        groupID,
 			MinBytes:       1,

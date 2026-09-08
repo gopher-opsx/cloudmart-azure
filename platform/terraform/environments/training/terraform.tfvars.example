@@ -1,6 +1,10 @@
-location = "eastus"
-resource_group_name = "rg-cloudmart-training-eastus"
-acr_name = "<globally-unique-acr-name>"
-key_vault_name = "<globally-unique-kv-name>"
-postgres_admin_username = "cloudmartadmin"
-# Never commit passwords or connection strings here.
+# Copy this file to terraform.tfvars and replace the example values.
+# Never store passwords, tokens, or connection strings here.
+
+name_suffix = "a1b2c3"
+owner       = "course-operator"
+
+# Microsoft Entra object ID for the signed-in course operator.
+# Get it with:
+# az ad signed-in-user show --query id -o tsv
+publisher_object_id = "00000000-0000-0000-0000-000000000000"

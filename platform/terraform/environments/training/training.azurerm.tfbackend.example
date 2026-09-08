@@ -1,4 +1,7 @@
 resource_group_name  = "rg-cloudmart-tfstate-eastus"
-storage_account_name = "<globally-unique-storage-account>"
+storage_account_name = "stcloudmarttf<unique-suffix>"
 container_name       = "tfstate"
 key                  = "cloudmart/training/terraform.tfstate"
+
+use_azuread_auth = true
+use_cli          = true

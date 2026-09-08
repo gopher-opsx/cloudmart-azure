@@ -15,10 +15,17 @@ import (
 	"github.com/gopher-opsx/cloudmart-azure/services/notification-service/internal/infrastructure/postgres"
 	"github.com/gopher-opsx/cloudmart-azure/services/notification-service/internal/metrics"
 	"github.com/gopher-opsx/cloudmart-azure/services/notification-service/internal/service"
+	"github.com/gopher-opsx/cloudmart-azure/services/notification-service/internal/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
 	cfg := config.Load()
+	shutdownTelemetry, err := telemetry.Start(context.Background(), "notification-service")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = shutdownTelemetry(context.Background()) }()
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	pool, err := postgres.NewPool(ctx, cfg.DatabaseURL)
@@ -46,7 +53,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ready"))
 	})
-	server := &http.Server{Addr: cfg.HTTPAddr, Handler: metricCollector.Middleware(mux), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: cfg.HTTPAddr, Handler: otelhttp.NewHandler(metricCollector.Middleware(mux), "notification-service.http"), ReadHeaderTimeout: 5 * time.Second}
 	serverErrors := make(chan error, 1)
 	go func() {
 		log.Printf("notification-service listening on %s", cfg.HTTPAddr)
