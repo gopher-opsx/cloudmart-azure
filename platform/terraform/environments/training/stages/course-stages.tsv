@@ -1,0 +1,29 @@
+lesson	new_capability	terraform_activation
+22	Foundation validation	No CloudMart workload resources
+23	Resource Group	resource_group
+26	Azure Container Registry	container_registry
+27	Operator AcrPush RBAC	acr_publisher
+32	Log Analytics	log_analytics
+33	Container Apps Environment	container_apps_environment
+34	Application Insights	application_insights
+35	Key Vault	key_vault
+36	User-assigned managed identities	managed_identities
+37	Workload AcrPull + Key Vault RBAC	workload_rbac
+39	PostgreSQL Flexible Server	postgresql_server
+40	PostgreSQL administration firewall	postgresql_firewall
+41	Five service-owned PostgreSQL databases	postgresql_databases
+43	Azure Managed Redis	managed_redis
+47	Event Hubs namespace	event_hubs_namespace
+48	Orders, inventory, and payments Event Hubs	event_hubs
+50	Scoped Event Hubs Send+Listen SAS rule	event_hubs_auth
+54	Catalog Container App + Catalog DB secret + training PostgreSQL Azure access	catalog_app
+55	Cart Container App + Redis secret	cart_app
+56	Order Container App + DB/Event Hubs secrets	order_app
+57	Inventory worker Container App + DB secret	inventory_app
+58	Payment worker Container App + DB secret	payment_app
+59	Notification worker Container App + DB secret	notification_app
+60	Backend health probes + training right-sizing	backend_runtime_policy
+62	Web BFF Container App	web_bff_app
+64	Public Storefront Container App	storefront_app
+65	Edge HTTPS/CORS policy verification	edge_policy_verified
+67	Security hardening checkpoint	security_hardening_checkpoint

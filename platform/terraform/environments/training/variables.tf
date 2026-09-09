@@ -54,7 +54,48 @@ variable "course_stage" {
   default     = 22
 
   validation {
-    condition     = var.course_stage >= 22
-    error_message = "course_stage must be lesson 22 or later."
+    condition     = var.course_stage >= 22 && var.course_stage <= 95
+    error_message = "course_stage must be between Lesson 22 and Lesson 95."
   }
+}
+
+variable "postgresql_administrator_login" {
+  description = "PostgreSQL administrator login used for controlled training setup tasks."
+  type        = string
+  default     = "cloudmartadmin"
+}
+
+variable "postgresql_administrator_password" {
+  description = "PostgreSQL administrator password. Supply with TF_VAR_postgresql_administrator_password; never commit it."
+  type        = string
+  sensitive   = true
+  default     = null
+  nullable    = true
+}
+
+variable "postgresql_sku_name" {
+  description = "Training PostgreSQL Flexible Server SKU."
+  type        = string
+  default     = "B_Standard_B1ms"
+}
+
+variable "postgresql_admin_client_ipv4" {
+  description = "Current public IPv4 address allowed to administer PostgreSQL. Keep this value in ignored terraform.tfvars."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition = (
+      var.postgresql_admin_client_ipv4 == null ||
+      can(cidrhost("${var.postgresql_admin_client_ipv4}/32", 0))
+    )
+    error_message = "postgresql_admin_client_ipv4 must be a valid IPv4 address."
+  }
+}
+
+variable "cloudmart_image_references" {
+  description = "Immutable CloudMart image references keyed by release-manifest component name."
+  type        = map(string)
+  default     = {}
 }

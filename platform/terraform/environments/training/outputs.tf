@@ -1,3 +1,8 @@
+output "course_stage" {
+  description = "Course lesson stage last applied to this Terraform state."
+  value       = var.course_stage
+}
+
 output "deployment_context" {
   description = "Shared CloudMart training deployment context."
   value = {
@@ -91,4 +96,86 @@ output "managed_identity_principal_ids" {
 output "managed_identity_names" {
   description = "User-assigned managed identity names keyed by CloudMart component."
   value       = local.stage.managed_identities ? module.managed_identities[0].names : {}
+}
+
+output "postgresql" {
+  description = "CloudMart PostgreSQL Flexible Server connection metadata."
+  value = local.stage.postgresql_server ? {
+    id                  = module.postgresql[0].id
+    name                = module.postgresql[0].name
+    fqdn                = module.postgresql[0].fqdn
+    administrator_login = module.postgresql[0].administrator_login
+  } : null
+}
+
+output "postgresql_database_names" {
+  description = "CloudMart service-owned PostgreSQL databases."
+  value       = local.stage.postgresql_databases ? module.postgresql[0].database_names : []
+}
+
+output "managed_redis" {
+  description = "CloudMart Azure Managed Redis endpoint metadata."
+  value = local.stage.managed_redis ? {
+    id       = module.managed_redis[0].id
+    name     = module.managed_redis[0].name
+    hostname = module.managed_redis[0].hostname
+    port     = module.managed_redis[0].port
+  } : null
+}
+
+output "managed_redis_primary_access_key" {
+  description = "Managed Redis primary access key used by the training Cart Service."
+  value       = local.stage.managed_redis ? module.managed_redis[0].primary_access_key : null
+  sensitive   = true
+}
+
+output "event_hubs" {
+  description = "CloudMart Event Hubs namespace and Kafka-compatible endpoint metadata."
+  value = local.stage.event_hubs_namespace ? {
+    id              = module.event_hubs[0].id
+    name            = module.event_hubs[0].name
+    kafka_broker    = module.event_hubs[0].kafka_broker
+    event_hub_names = module.event_hubs[0].event_hub_names
+  } : null
+}
+
+output "event_hubs_application_connection_string" {
+  description = "Scoped Send+Listen Event Hubs connection string used as the Kafka SASL PLAIN password."
+  value       = local.stage.event_hubs_auth ? module.event_hubs[0].application_primary_connection_string : null
+  sensitive   = true
+}
+
+output "backend_container_apps" {
+  description = "CloudMart backend Container App names and ingress FQDNs."
+  value = {
+    catalog = local.stage.catalog_app ? {
+      name = module.catalog_app[0].name
+      fqdn = module.catalog_app[0].fqdn
+    } : null
+
+    cart = local.stage.cart_app ? {
+      name = module.cart_app[0].name
+      fqdn = module.cart_app[0].fqdn
+    } : null
+
+    order = local.stage.order_app ? {
+      name = module.order_app[0].name
+      fqdn = module.order_app[0].fqdn
+    } : null
+
+    inventory = local.stage.inventory_app ? {
+      name = module.inventory_app[0].name
+      fqdn = module.inventory_app[0].fqdn
+    } : null
+
+    payment = local.stage.payment_app ? {
+      name = module.payment_app[0].name
+      fqdn = module.payment_app[0].fqdn
+    } : null
+
+    notification = local.stage.notification_app ? {
+      name = module.notification_app[0].name
+      fqdn = module.notification_app[0].fqdn
+    } : null
+  }
 }

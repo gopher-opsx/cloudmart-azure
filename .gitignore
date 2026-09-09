@@ -38,6 +38,7 @@ docker-data/
 crash.log
 *.tfvars
 !*.tfvars.example
+!platform/terraform/environments/training/stages/*.tfvars
 *.tfbackend
 !*.tfbackend.example
 
@@ -49,3 +50,9 @@ release-manifest.json
 tmp/
 temp/
 external-assets/
+
+# Course helper runtime files
+.course/
+
+# Generated Terraform release inputs
+*.auto.tfvars.json

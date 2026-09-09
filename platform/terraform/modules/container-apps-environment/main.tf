@@ -5,8 +5,7 @@ resource "azurerm_container_app_environment" "this" {
 
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  public_network_access   = "Enabled"
-  zone_redundancy_enabled = false
+  public_network_access = "Enabled"
 
   workload_profile {
     name                  = "Consumption"

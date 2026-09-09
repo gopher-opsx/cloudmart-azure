@@ -73,3 +73,25 @@ values such as `name_suffix`, `owner`, and `publisher_object_id`.
 
 The stage file only controls which part of the complete course infrastructure
 is active at that point in the recording.
+
+## Course-stage safety helpers
+
+The lessons continue to use native Terraform commands and explicit lesson
+stage files. The repository also contains optional guard scripts for dry runs,
+recording preparation, and accidental rollback protection:
+
+```bash
+./scripts/terraform/course-stage.sh 35
+./scripts/terraform/course-plan.sh 35
+./scripts/terraform/course-apply.sh 35
+```
+
+`course-plan.sh` refuses to plan an earlier lesson than the stage recorded in
+Terraform state unless `ALLOW_STAGE_ROLLBACK=1` is explicitly set.
+
+Saved helper plans are written below `.course/`, which is intentionally ignored
+by Git.
+
+The committed files under `environments/training/stages/` are course
+configuration and are intentionally exempted from the repository-wide
+`*.tfvars` ignore rule.
