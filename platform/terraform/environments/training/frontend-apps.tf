@@ -23,10 +23,12 @@ module "web_bff_app" {
   memory = "0.5Gi"
 
   environment_variables = {
-    HTTP_ADDR           = { value = ":8080" }
-    CATALOG_SERVICE_URL = { value = local.web_bff_catalog_url }
-    CART_SERVICE_URL    = { value = local.web_bff_cart_url }
-    ORDER_SERVICE_URL   = { value = local.web_bff_order_url }
+    OTEL_SERVICE_NAME           = { value = "web-bff" }
+    OTEL_EXPORTER_OTLP_PROTOCOL = { value = "grpc" }
+    HTTP_ADDR                   = { value = ":8080" }
+    CATALOG_SERVICE_URL         = { value = local.web_bff_catalog_url }
+    CART_SERVICE_URL            = { value = local.web_bff_cart_url }
+    ORDER_SERVICE_URL           = { value = local.web_bff_order_url }
 
     # Browser traffic stays same-origin through Storefront /api.
     # This is intentionally not a wildcard CORS policy.
@@ -39,7 +41,15 @@ module "web_bff_app" {
   }
 
   probes_enabled = true
-  probe_port     = 8080
+  min_replicas   = 1
+  max_replicas   = local.stage.workload_scaling ? 3 : 1
+
+  http_scale_rules = local.stage.workload_scaling ? [{
+    name                = "http-concurrency"
+    concurrent_requests = "50"
+  }] : []
+
+  probe_port = 8080
 
   tags = local.common_tags
 }
@@ -57,6 +67,8 @@ module "storefront_app" {
   identity_id     = module.managed_identities[0].ids["storefront"]
   registry_server = module.container_registry[0].login_server
 
+  revision_mode = local.stage.storefront_multiple_revisions ? "Multiple" : "Single"
+
   cpu    = 0.25
   memory = "0.5Gi"
 
@@ -70,7 +82,15 @@ module "storefront_app" {
   }
 
   probes_enabled = true
-  probe_port     = 80
+  min_replicas   = 1
+  max_replicas   = local.stage.workload_scaling ? 3 : 1
+
+  http_scale_rules = local.stage.workload_scaling ? [{
+    name                = "http-concurrency"
+    concurrent_requests = "50"
+  }] : []
+
+  probe_port = 80
 
   tags = local.common_tags
 }

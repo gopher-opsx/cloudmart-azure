@@ -27,3 +27,12 @@ lesson	new_capability	terraform_activation
 64	Public Storefront Container App	storefront_app
 65	Edge HTTPS/CORS policy verification	edge_policy_verified
 67	Security hardening checkpoint	security_hardening_checkpoint
+73	Managed OpenTelemetry agent -> Application Insights	managed_otel_agent
+77	Operations workbook + failed-revision alert	operations_monitoring
+78	HTTP concurrency + Kafka lag autoscaling	workload_scaling
+88	Storefront multiple-revision mode	storefront_multiple_revisions
+89	Full-course rebuild checkpoint	final_project
+90	End-to-end acceptance	final_validation
+92	Security/observability/delivery evidence	final_evidence
+94	Terraform-managed workload teardown	destroy_workload
+95	Bootstrap cleanup and zero-resource verification	course_cleanup

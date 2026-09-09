@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 TARGET="platform/terraform/environments/training/troubleshooting.auto.tfvars"
-cat > "$TARGET" <<'EOF'
-troubleshooting_catalog_database_secret_name = "catalog-database-url-invalid"
+
+cat > "${TARGET}" <<'EOF'
+troubleshooting_catalog_db_failure = true
 EOF
-printf 'Created %s for Catalog DB failure exercise.\n' "$TARGET"
+
+printf 'Created %s\n' "${TARGET}"
+printf 'Lesson 80: Catalog will receive a Key Vault referenced URL with an intentionally unreachable PostgreSQL port.\n'

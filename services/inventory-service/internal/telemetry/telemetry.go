@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"os"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -17,7 +18,20 @@ func Start(ctx context.Context, serviceName string) (func(context.Context) error
 	if endpoint == "" {
 		endpoint = "otel-collector:4317"
 	}
-	exporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithEndpoint(endpoint), otlptracegrpc.WithInsecure())
+
+	insecure := true
+	if strings.HasPrefix(endpoint, "https://") {
+		insecure = false
+	}
+	endpoint = strings.TrimPrefix(strings.TrimPrefix(endpoint, "http://"), "https://")
+	endpoint = strings.TrimSuffix(endpoint, "/")
+
+	opts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(endpoint)}
+	if insecure {
+		opts = append(opts, otlptracegrpc.WithInsecure())
+	}
+
+	exporter, err := otlptracegrpc.New(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

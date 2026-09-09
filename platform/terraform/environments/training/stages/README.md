@@ -131,3 +131,59 @@ The security section intentionally does not create an insecure intermediate
 state. Backend services use Key Vault references from their first Azure
 deployment. Lessons 67-72 audit and explain that security model rather than
 temporarily exposing secrets in plaintext.
+
+## Section 12 activation boundaries
+
+| Lesson | Newly enabled infrastructure |
+|---|---|
+| 73 | Container Apps managed OpenTelemetry agent routing traces/logs to Application Insights |
+| 74 | No new resources; inspect logs, metrics, traces |
+| 75 | No new resources; successful Saga observation |
+| 76 | No new resources; deterministic business failure + compensation |
+| 77 | CloudMart operations workbook and failed-revision log alert |
+| 78 | HTTP concurrency scaling and Kafka-lag scaling |
+| 79 | No permanent resources; controlled failed Order revision |
+| 80 | No permanent resources; controlled database and Event Hubs dependency failures |
+| 81 | No new resources; reliability/cost checkpoint |
+
+Section 12 troubleshooting uses ignored `troubleshooting.auto.tfvars`.
+Always remove it after the exercise:
+
+```bash
+./scripts/troubleshooting/disable-overrides.sh
+```
+
+## Section 13 activation boundaries
+
+| Lesson | Newly enabled infrastructure |
+|---|---|
+| 82 | No Azure resources; CI/CD workflow boundary |
+| 83 | GitHub OIDC deployment identity and scoped RBAC are bootstrapped outside Terraform |
+| 84 | No Azure resources; build validation only |
+| 85 | New SHA-tagged image manifests in the existing ACR |
+| 86 | New Container App revisions from immutable release digests |
+| 87 | No Azure resources; post-deployment smoke tests |
+| 88 | Storefront switches to Multiple revision mode; promotion/rollback traffic is owned by CD |
+
+Terraform intentionally ignores Container App traffic-weight drift. Infrastructure
+code owns whether multiple revisions are supported; the release workflow owns
+candidate/stable routing decisions.
+
+## Section 14 lifecycle checkpoints
+
+Lessons 89-95 do not activate new permanent application infrastructure beyond
+the completed platform. Their stage files preserve the forward-only course
+state while the final project exercises the lifecycle.
+
+| Lesson | Final-project activity |
+|---|---|
+| 89 | Rebuild the complete CloudMart environment from the repository |
+| 90 | Run consolidated end-to-end acceptance |
+| 91 | Validate success and compensation Saga paths |
+| 92 | Preserve security, observability, and delivery evidence |
+| 93 | Record architecture, production evolution, and current cost position |
+| 94 | Review and apply a saved Terraform destroy plan |
+| 95 | Remove the separate state bootstrap and verify zero active CloudMart resources |
+
+Use `.course/final-evidence/` for local sanitized evidence. The directory is
+already excluded from Git.

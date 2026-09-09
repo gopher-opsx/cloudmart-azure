@@ -1,0 +1,5 @@
+ContainerAppConsoleLogs_CL
+| where TimeGenerated > ago(30m)
+| where Log_s has_any ("error", "failed", "timeout")
+| project TimeGenerated, ContainerAppName_s, RevisionName_s, Log_s
+| order by TimeGenerated desc

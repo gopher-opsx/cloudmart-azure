@@ -56,15 +56,27 @@ locals {
   ])
 
 
-  postgresql_firewall_rules = (
-    local.stage.postgresql_firewall && var.postgresql_admin_client_ipv4 != null
-    ? {
-      admin-client = {
-        start_ip_address = var.postgresql_admin_client_ipv4
-        end_ip_address   = var.postgresql_admin_client_ipv4
+  postgresql_firewall_rules = merge(
+    (
+      local.stage.postgresql_firewall && var.postgresql_admin_client_ipv4 != null
+      ? {
+        admin-client = {
+          start_ip_address = var.postgresql_admin_client_ipv4
+          end_ip_address   = var.postgresql_admin_client_ipv4
+        }
       }
-    }
-    : {}
+      : {}
+    ),
+    (
+      local.stage.postgresql_runtime_access
+      ? {
+        allow-azure-services-training = {
+          start_ip_address = "0.0.0.0"
+          end_ip_address   = "0.0.0.0"
+        }
+      }
+      : {}
+    )
   )
 
   postgresql_databases = local.stage.postgresql_databases ? toset([
@@ -148,5 +160,9 @@ locals {
     storefront_app                = var.course_stage >= 64
     edge_policy_verified          = var.course_stage >= 65
     security_hardening_checkpoint = var.course_stage >= 67
+    managed_otel_agent            = var.course_stage >= 73
+    operations_monitoring         = var.course_stage >= 77
+    workload_scaling              = var.course_stage >= 78
+    storefront_multiple_revisions = var.course_stage >= 88
   }
 }

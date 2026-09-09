@@ -105,3 +105,49 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "http_scale_rules" {
+  description = "HTTP concurrency scaling rules."
+  type = list(object({
+    name                = string
+    concurrent_requests = string
+  }))
+  default = []
+}
+
+variable "custom_scale_rules" {
+  description = "KEDA-compatible custom scaling rules."
+  type = list(object({
+    name             = string
+    custom_rule_type = string
+    metadata         = map(string)
+    authentication = optional(list(object({
+      secret_name       = string
+      trigger_parameter = string
+    })), [])
+  }))
+  default = []
+}
+
+variable "polling_interval_in_seconds" {
+  description = "KEDA polling interval."
+  type        = number
+  default     = 30
+}
+
+variable "cooldown_period_in_seconds" {
+  description = "KEDA cooldown period."
+  type        = number
+  default     = 300
+}
+
+variable "revision_mode" {
+  description = "Container Apps revision mode. Traffic splitting requires Multiple."
+  type        = string
+  default     = "Single"
+
+  validation {
+    condition     = contains(["Single", "Multiple"], var.revision_mode)
+    error_message = "revision_mode must be Single or Multiple."
+  }
+}

@@ -99,3 +99,29 @@ variable "cloudmart_image_references" {
   type        = map(string)
   default     = {}
 }
+
+variable "operations_alert_email" {
+  description = "Optional email receiver for the Lesson 77 operations action group. Leave null to create the alert without email notification."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "troubleshooting_order_image" {
+  description = "Optional intentionally bad Order image used only by Lesson 79."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "troubleshooting_catalog_db_failure" {
+  description = "Enable the controlled Catalog database-connectivity failure used by Lesson 80."
+  type        = bool
+  default     = false
+}
+
+variable "troubleshooting_inventory_kafka_failure" {
+  description = "Enable the controlled Inventory Event Hubs authentication failure used by Lesson 80."
+  type        = bool
+  default     = false
+}

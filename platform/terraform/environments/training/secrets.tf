@@ -63,3 +63,21 @@ resource "azurerm_key_vault_secret" "notification_database_url" {
   value        = local.postgres_database_urls.notification
   key_vault_id = module.key_vault[0].id
 }
+
+resource "azurerm_key_vault_secret" "catalog_database_url_failure" {
+  count = var.troubleshooting_catalog_db_failure ? 1 : 0
+
+  name  = "catalog-database-url-troubleshooting"
+  value = "postgres://cloudmartinvalid:invalid@${module.postgresql[0].fqdn}:5433/catalog_db?sslmode=require"
+
+  key_vault_id = module.key_vault[0].id
+}
+
+resource "azurerm_key_vault_secret" "event_hubs_connection_string_failure" {
+  count = var.troubleshooting_inventory_kafka_failure ? 1 : 0
+
+  name  = "event-hubs-connection-string-troubleshooting"
+  value = "Endpoint=sb://${module.event_hubs[0].name}.servicebus.windows.net/;SharedAccessKeyName=cloudmart-applications;SharedAccessKey=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+
+  key_vault_id = module.key_vault[0].id
+}

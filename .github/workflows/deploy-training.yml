@@ -1,0 +1,337 @@
+name: Deploy · training
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Delivery stage to run
+        required: true
+        default: identity
+        type: choice
+        options:
+          - identity
+          - build
+          - publish
+          - deploy
+          - candidate
+          - promote
+          - rollback
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cloudmart-training-delivery
+  cancel-in-progress: false
+
+env:
+  RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP || 'rg-cloudmart-training-eastus' }}
+  ACR_NAME: ${{ vars.ACR_NAME }}
+
+jobs:
+  identity:
+    name: OIDC · Azure identity
+    if: ${{ inputs.operation != 'build' }}
+    runs-on: ubuntu-latest
+    environment: training
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify Azure session
+        run: |
+          az account show \
+            --query "{Subscription:name,Tenant:tenantId,User:user.name,Type:user.type}" \
+            -o table
+
+  metadata:
+    name: Release metadata
+    if: ${{ contains(fromJSON('["build","publish","deploy","candidate"]'), inputs.operation) }}
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.release.outputs.short_sha }}
+      image_tag: ${{ steps.release.outputs.image_tag }}
+    steps:
+      - id: release
+        name: Derive SHA release identity
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA::12}"
+          echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=sha-${short_sha}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build · ${{ matrix.component }}
+    if: ${{ contains(fromJSON('["build","publish","deploy","candidate"]'), inputs.operation) }}
+    needs: metadata
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: storefront
+            dockerfile: apps/storefront/Dockerfile
+          - component: web-bff
+            dockerfile: services/web-bff/Dockerfile
+          - component: catalog-service
+            dockerfile: services/catalog-service/Dockerfile
+          - component: cart-service
+            dockerfile: services/cart-service/Dockerfile
+          - component: order-service
+            dockerfile: services/order-service/Dockerfile
+          - component: inventory-service
+            dockerfile: services/inventory-service/Dockerfile
+          - component: payment-service
+            dockerfile: services/payment-service/Dockerfile
+          - component: notification-service
+            dockerfile: services/notification-service/Dockerfile
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          tags: cloudmart-ci/${{ matrix.component }}:${{ needs.metadata.outputs.image_tag }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.component }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component }}
+
+  publish:
+    name: Publish · ${{ matrix.component }}
+    if: ${{ contains(fromJSON('["publish","deploy","candidate"]'), inputs.operation) }}
+    needs: [identity, metadata, build]
+    runs-on: ubuntu-latest
+    environment: training
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: storefront
+            repository: cloudmart/storefront
+            dockerfile: apps/storefront/Dockerfile
+          - component: web-bff
+            repository: cloudmart/web-bff
+            dockerfile: services/web-bff/Dockerfile
+          - component: catalog-service
+            repository: cloudmart/catalog-service
+            dockerfile: services/catalog-service/Dockerfile
+          - component: cart-service
+            repository: cloudmart/cart-service
+            dockerfile: services/cart-service/Dockerfile
+          - component: order-service
+            repository: cloudmart/order-service
+            dockerfile: services/order-service/Dockerfile
+          - component: inventory-service
+            repository: cloudmart/inventory-service
+            dockerfile: services/inventory-service/Dockerfile
+          - component: payment-service
+            repository: cloudmart/payment-service
+            dockerfile: services/payment-service/Dockerfile
+          - component: notification-service
+            repository: cloudmart/notification-service
+            dockerfile: services/notification-service/Dockerfile
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve ACR login server
+        id: acr
+        shell: bash
+        run: |
+          test -n "$ACR_NAME"
+          login_server="$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)"
+          echo "login_server=${login_server}" >> "$GITHUB_OUTPUT"
+
+      - name: Login Docker to ACR
+        run: az acr login --name "$ACR_NAME"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push SHA image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.acr.outputs.login_server }}/${{ matrix.repository }}:${{ needs.metadata.outputs.image_tag }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.component }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component }}
+
+  manifest:
+    name: Immutable release manifest
+    if: ${{ contains(fromJSON('["publish","deploy","candidate"]'), inputs.operation) }}
+    needs: [identity, metadata, publish]
+    runs-on: ubuntu-latest
+    environment: training
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create digest manifest
+        shell: bash
+        run: |
+          export ACR_LOGIN_SERVER="$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)"
+          ./scripts/cd/create-workflow-release-manifest.sh
+
+      - name: Upload immutable manifest
+        uses: actions/upload-artifact@v6
+        with:
+          name: cloudmart-release-${{ needs.metadata.outputs.image_tag }}
+          path: release-manifest.json
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy immutable revisions
+    if: ${{ inputs.operation == 'deploy' }}
+    needs: [identity, metadata, manifest]
+    runs-on: ubuntu-latest
+    environment: training
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: cloudmart-release-${{ needs.metadata.outputs.image_tag }}
+
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy all eight apps
+        run: ./scripts/cd/deploy-container-apps.sh release-manifest.json
+
+      - name: Verify active revisions
+        run: ./scripts/cd/verify-release.sh
+
+      - name: Resolve Storefront endpoint
+        id: storefront
+        shell: bash
+        run: |
+          fqdn="$(az containerapp show \
+            -g "$RESOURCE_GROUP" \
+            -n ca-storefront-training \
+            --query properties.configuration.ingress.fqdn \
+            -o tsv)"
+          echo "url=https://${fqdn}" >> "$GITHUB_OUTPUT"
+
+      - name: Run post-deployment smoke tests
+        env:
+          STOREFRONT_URL: ${{ steps.storefront.outputs.url }}
+        run: ./scripts/cd/smoke-test.sh
+
+  candidate:
+    name: Prepare Storefront candidate
+    if: ${{ inputs.operation == 'candidate' }}
+    needs: [identity, metadata, manifest]
+    runs-on: ubuntu-latest
+    environment: training
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: cloudmart-release-${{ needs.metadata.outputs.image_tag }}
+
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy non-Storefront components
+        env:
+          SKIP_STOREFRONT: "1"
+        run: ./scripts/cd/deploy-container-apps.sh release-manifest.json
+
+      - name: Create zero-traffic candidate
+        id: candidate
+        shell: bash
+        run: |
+          ./scripts/cd/prepare-storefront-candidate.sh release-manifest.json | tee candidate.env
+          grep -E '^(STABLE_REVISION|CANDIDATE_REVISION|CANDIDATE_URL)=' candidate.env >> "$GITHUB_OUTPUT"
+
+      - name: Verify candidate directly
+        env:
+          CANDIDATE_REVISION: ${{ steps.candidate.outputs.CANDIDATE_REVISION }}
+          CANDIDATE_URL: ${{ steps.candidate.outputs.CANDIDATE_URL }}
+        shell: bash
+        run: |
+          export EXPECTED_IMAGE="$(jq -r '.images.storefront.immutableReference' release-manifest.json)"
+          ./scripts/cd/candidate-verify.sh
+
+      - name: Shift 10 percent traffic
+        env:
+          STABLE_WEIGHT: "90"
+          CANDIDATE_WEIGHT: "10"
+        run: ./scripts/cd/set-storefront-traffic.sh
+
+      - name: Smoke test weighted public route
+        shell: bash
+        run: |
+          fqdn="$(az containerapp show \
+            -g "$RESOURCE_GROUP" \
+            -n ca-storefront-training \
+            --query properties.configuration.ingress.fqdn \
+            -o tsv)"
+          STOREFRONT_URL="https://${fqdn}" ./scripts/cd/smoke-test.sh
+
+  promote:
+    name: Promote Storefront candidate
+    if: ${{ inputs.operation == 'promote' }}
+    needs: identity
+    runs-on: ubuntu-latest
+    environment: training
+    steps:
+      - uses: actions/checkout@v6
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - run: ./scripts/cd/promote-storefront.sh
+
+  rollback:
+    name: Roll back Storefront
+    if: ${{ inputs.operation == 'rollback' }}
+    needs: identity
+    runs-on: ubuntu-latest
+    environment: training
+    steps:
+      - uses: actions/checkout@v6
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - run: ./scripts/cd/rollback-storefront.sh

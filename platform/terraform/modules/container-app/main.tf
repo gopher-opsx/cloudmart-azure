@@ -3,7 +3,7 @@ resource "azurerm_container_app" "this" {
   container_app_environment_id = var.container_app_environment_id
   resource_group_name          = var.resource_group_name
 
-  revision_mode = "Single"
+  revision_mode = var.revision_mode
 
   identity {
     type         = "UserAssigned"
@@ -42,8 +42,38 @@ resource "azurerm_container_app" "this" {
   }
 
   template {
-    min_replicas = var.min_replicas
-    max_replicas = var.max_replicas
+    min_replicas                = var.min_replicas
+    max_replicas                = var.max_replicas
+    polling_interval_in_seconds = var.polling_interval_in_seconds
+    cooldown_period_in_seconds  = var.cooldown_period_in_seconds
+
+    dynamic "http_scale_rule" {
+      for_each = var.http_scale_rules
+
+      content {
+        name                = http_scale_rule.value.name
+        concurrent_requests = http_scale_rule.value.concurrent_requests
+      }
+    }
+
+    dynamic "custom_scale_rule" {
+      for_each = var.custom_scale_rules
+
+      content {
+        name             = custom_scale_rule.value.name
+        custom_rule_type = custom_scale_rule.value.custom_rule_type
+        metadata         = custom_scale_rule.value.metadata
+
+        dynamic "authentication" {
+          for_each = custom_scale_rule.value.authentication
+
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
 
     container {
       name   = var.container_name
@@ -107,4 +137,11 @@ resource "azurerm_container_app" "this" {
   }
 
   tags = var.tags
+
+  lifecycle {
+    # Terraform establishes the initial ingress configuration, but release
+    # promotion/rollback is an operational CD concern. Do not undo canary
+    # traffic decisions on the next infrastructure plan.
+    ignore_changes = [ingress[0].traffic_weight]
+  }
 }
