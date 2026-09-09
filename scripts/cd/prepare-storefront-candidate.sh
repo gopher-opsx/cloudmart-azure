@@ -21,11 +21,24 @@ git_sha="$(jq -r '.gitSha' "$MANIFEST")"
 suffix="sha-$(cut -c1-12 <<<"$git_sha")"
 candidate="${APP}--${suffix}"
 
-az containerapp revision set-mode \
-  --resource-group "$RG" \
-  --name "$APP" \
-  --mode multiple \
-  --only-show-errors >/dev/null
+current_mode="$(
+  az containerapp show \
+    --resource-group "$RG" \
+    --name "$APP" \
+    --query properties.configuration.activeRevisionsMode \
+    -o tsv
+)"
+
+if [[ "$current_mode" != "Multiple" ]]; then
+  info "Switching Storefront operational revision mode to Multiple for the release exercise"
+  az containerapp revision set-mode \
+    --resource-group "$RG" \
+    --name "$APP" \
+    --mode multiple \
+    --only-show-errors >/dev/null
+else
+  info "Storefront already uses Multiple revision mode"
+fi
 
 traffic="$(az containerapp ingress traffic show -g "$RG" -n "$APP" -o json)"
 stable="$(

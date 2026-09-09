@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"
 
-for cmd in git terraform az docker curl; do
+for cmd in git terraform az docker curl python; do
   require_cmd "$cmd"
 done
 
@@ -25,17 +25,12 @@ backend="$ROOT/platform/terraform/environments/training/training.azurerm.tfbacke
 [[ -f "$backend" ]] || fail "missing local backend configuration: ${backend}"
 pass "Terraform backend configuration present"
 
-tfvars="$ROOT/platform/terraform/environments/training/release.auto.tfvars.json"
-[[ -f "$tfvars" ]] || fail "missing release.auto.tfvars.json; run scripts/terraform/render-release-tfvars.sh"
-pass "immutable Terraform release inputs present"
-
-manifest="$ROOT/release-manifest.json"
-[[ -f "$manifest" ]] || fail "release-manifest.json not found"
-pass "immutable release manifest present"
-
 if [[ -f "$ROOT/platform/terraform/environments/training/troubleshooting.auto.tfvars" ]]; then
   fail "troubleshooting.auto.tfvars is still active; run disable-overrides.sh"
 fi
 pass "no troubleshooting override active"
+
+info "Fresh release artifacts are created after the Lesson 53 foundation rebuild."
+info "Old release-manifest.json and release.auto.tfvars.json are not trusted as clean-rebuild inputs."
 
 pass "FINAL PROJECT PREFLIGHT"
