@@ -72,4 +72,25 @@ Examples to evaluate:
 - Approximate course spend:
 - Billing data delay explained:
 
-Record the Git revision, Azure region, architecture decisions, deployed services, release SHA/digests, Saga evidence, security/observability/CI-CD status, reported cost, production improvements, and final teardown evidence.
+## Teardown
+
+- Final evidence captured:
+- Terraform destroy plan reviewed:
+- Workload destroyed:
+- Workload Azure verification:
+- Soft-deleted Key Vault checked:
+- Terraform backend removed:
+- Active CloudMart resource groups remaining:
+- Active CloudMart resources remaining:
+
+## Sharing safety
+
+Never include:
+
+- Terraform state
+- passwords
+- access keys
+- connection strings
+- tokens
+- OIDC assertions
+- private credentials
