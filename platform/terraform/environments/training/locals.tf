@@ -3,8 +3,6 @@ locals {
 
   resource_group_name = "rg-${local.name_base}-${var.location}"
 
-  # Some Azure resources, including ACR, have global naming constraints and
-  # cannot contain hyphens. name_suffix keeps the training deployment unique.
   resource_names = {
     container_registry          = lower("acr${replace(var.project_name, "-", "")}${replace(var.environment, "-", "")}${var.name_suffix}")
     log_analytics_workspace     = "log-${local.name_base}-${var.location}"
@@ -32,38 +30,38 @@ locals {
     notification = "ca-notification-${var.environment}"
   }
 
-managed_identity_names = {
-  "storefront" =
-    "id-cloudmart-storefront-${var.environment}-${var.location}"
+  managed_identity_names = {
+    storefront           = "id-cloudmart-storefront-${var.environment}-${var.location}"
+    web-bff              = "id-cloudmart-web-bff-${var.environment}-${var.location}"
+    catalog-service      = "id-cloudmart-catalog-${var.environment}-${var.location}"
+    cart-service         = "id-cloudmart-cart-${var.environment}-${var.location}"
+    order-service        = "id-cloudmart-order-${var.environment}-${var.location}"
+    inventory-service    = "id-cloudmart-inventory-${var.environment}-${var.location}"
+    payment-service      = "id-cloudmart-payment-${var.environment}-${var.location}"
+    notification-service = "id-cloudmart-notification-${var.environment}-${var.location}"
+  }
 
-  "web-bff" =
-    "id-cloudmart-web-bff-${var.environment}-${var.location}"
+  secret_consumers = toset([
+    "catalog-service",
+    "cart-service",
+    "order-service",
+    "inventory-service",
+    "payment-service",
+    "notification-service",
+  ])
 
-  "catalog-service" =
-    "id-cloudmart-catalog-${var.environment}-${var.location}"
-
-  "cart-service" =
-    "id-cloudmart-cart-${var.environment}-${var.location}"
-
-  "order-service" =
-    "id-cloudmart-order-${var.environment}-${var.location}"
-
-  "inventory-service" =
-    "id-cloudmart-inventory-${var.environment}-${var.location}"
-
-  "payment-service" =
-    "id-cloudmart-payment-${var.environment}-${var.location}"
-
-  "notification-service" =
-    "id-cloudmart-notification-${var.environment}-${var.location}"
-}
-
-secret_consumers = toset([
-  "catalog-service",
-  "cart-service",
-  "order-service",
-  "inventory-service",
-  "payment-service",
-  "notification-service",
-])
+  # The complete course configuration lives on main. These gates make a
+  # lesson-specific tfvars file activate only the infrastructure introduced
+  # up to that point in the course.
+  stage = {
+    resource_group             = var.course_stage >= 23
+    container_registry         = var.course_stage >= 26
+    acr_publisher              = var.course_stage >= 27
+    log_analytics              = var.course_stage >= 32
+    container_apps_environment = var.course_stage >= 33
+    application_insights       = var.course_stage >= 34
+    key_vault                  = var.course_stage >= 35
+    managed_identities         = var.course_stage >= 36
+    workload_rbac              = var.course_stage >= 37
+  }
 }

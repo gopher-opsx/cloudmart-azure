@@ -56,3 +56,20 @@ terraform plan
 ```
 
 Before a recorded Terraform lesson, confirm the Azure subscription and review the plan before applying changes.
+
+## Course-stage execution
+
+The complete training Terraform configuration stays on `main`. When a lesson
+runs a Terraform plan, select the matching lesson stage explicitly:
+
+```bash
+terraform plan \
+  -var-file=stages/lesson-023.tfvars \
+  -out=cloudmart-training.tfplan
+```
+
+The ignored `terraform.tfvars` still carries account/environment-specific
+values such as `name_suffix`, `owner`, and `publisher_object_id`.
+
+The stage file only controls which part of the complete course infrastructure
+is active at that point in the recording.

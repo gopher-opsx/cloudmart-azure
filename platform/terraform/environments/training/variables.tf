@@ -47,3 +47,14 @@ variable "log_daily_quota_gb" {
   type        = number
   default     = 1
 }
+
+variable "course_stage" {
+  description = "Current course lesson used to progressively enable CloudMart Azure resources while keeping the complete Terraform code on main."
+  type        = number
+  default     = 22
+
+  validation {
+    condition     = var.course_stage >= 22
+    error_message = "course_stage must be lesson 22 or later."
+  }
+}
