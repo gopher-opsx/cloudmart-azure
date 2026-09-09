@@ -8,8 +8,9 @@ require_cmd az
 
 active_groups="$(
   az group list \
-    --query "[?contains(to_lower(name), 'cloudmart')].name" \
-    -o tsv
+    --query '[].name' \
+    -o tsv \
+  | grep -i 'cloudmart' || true
 )"
 [[ -z "$active_groups" ]] || {
   printf 'Remaining CloudMart resource groups:\n%s\n' "$active_groups" >&2
@@ -19,8 +20,9 @@ pass "no active CloudMart resource groups"
 
 active_resources="$(
   az resource list \
-    --query "[?contains(to_lower(name), 'cloudmart')].{name:name,type:type,resourceGroup:resourceGroup}" \
-    -o tsv
+    --query '[].[name,type,resourceGroup]' \
+    -o tsv \
+  | grep -i 'cloudmart' || true
 )"
 [[ -z "$active_resources" ]] || {
   printf 'Remaining CloudMart resources:\n%s\n' "$active_resources" >&2
@@ -30,8 +32,9 @@ pass "no active CloudMart resources"
 
 deleted_vaults="$(
   az keyvault list-deleted \
-    --query "[?contains(to_lower(name), 'cloudmart')].name" \
-    -o tsv
+    --query '[].name' \
+    -o tsv \
+  | grep -i 'cloudmart' || true
 )"
 
 if [[ -n "$deleted_vaults" ]]; then

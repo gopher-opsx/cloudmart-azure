@@ -25,6 +25,14 @@ backend="$ROOT/platform/terraform/environments/training/training.azurerm.tfbacke
 [[ -f "$backend" ]] || fail "missing local backend configuration: ${backend}"
 pass "Terraform backend configuration present"
 
+require_env TF_VAR_postgresql_administrator_password
+pass "PostgreSQL administrator password is loaded through TF_VAR"
+
+local_tfvars="$ROOT/platform/terraform/environments/training/terraform.tfvars"
+[[ -f "$local_tfvars" ]] || fail "missing ignored local terraform.tfvars"
+grep -Eq '^[[:space:]]*postgresql_admin_client_ipv4[[:space:]]*=' "$local_tfvars" ||   fail "terraform.tfvars must define postgresql_admin_client_ipv4 for final-project migrations"
+pass "PostgreSQL admin client IPv4 configuration present"
+
 if [[ -f "$ROOT/platform/terraform/environments/training/troubleshooting.auto.tfvars" ]]; then
   fail "troubleshooting.auto.tfvars is still active; run disable-overrides.sh"
 fi
