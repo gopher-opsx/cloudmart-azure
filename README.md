@@ -1,6 +1,6 @@
 # CloudMart Azure
 
-CloudMart is a cloud-native e-commerce reference application built to teach production microservice design locally before migrating the same architecture to Microsoft Azure.
+CloudMart is a cloud-native e-commerce reference application used to teach the migration of a verified local microservice system to Microsoft Azure.
 
 The application is implemented and runs end-to-end with an Angular storefront, Go services, PostgreSQL, Redis, Kafka, transactional outboxes, idempotent consumers, Saga compensation, Docker Compose, and automated smoke verification.
 
@@ -52,6 +52,9 @@ PostgreSQL transactions combine business-state changes, processed-event markers,
 - Redis 8 for shopping carts
 - Apache Kafka 4 for asynchronous workflows
 - Docker Compose for the complete local platform
+- Terraform for progressive Azure infrastructure stages
+- Azure Container Apps, PostgreSQL Flexible Server, Azure Managed Redis, Event Hubs, Key Vault, Application Insights, and ACR
+- GitHub Actions with workload-identity federation for CI/CD
 - OpenAPI and AsyncAPI contract examples
 
 ## Quick start
@@ -120,13 +123,20 @@ Run each long-lived target in a separate terminal. `make app-stop` stops only ap
 - `contracts` — HTTP and event contract examples
 - `platform` — Docker, database, and local platform configuration
 - `scripts` — repeatable operational and smoke-test commands
-- `docs` — architecture decisions, runbooks, and completion status
-- `infra` — future Azure infrastructure as code
-- `deploy` — future Kubernetes deployment assets
-- `pipelines` — future delivery pipelines
+- `docs` — architecture decisions, Azure operating notes, and recording asset map
+- `monitoring` — prepared KQL queries
+- `.github/workflows` — independent CI and Azure delivery workflows
 
-## Current completion status
+## Course execution model
 
-Completed: core application, both Saga paths, compensation, BFF, storefront, production containers, Compose health ordering, and automated local smoke tests.
+The complete implementation is kept in the repository. Terraform lesson-stage
+files under `platform/terraform/environments/training/stages/` progressively
+activate only the resources introduced by each lesson.
 
-Before the Azure phase: add OpenTelemetry/metrics, automated browser tests, migration automation, operational runbooks, and a tagged local release. See `docs/README.md`.
+Start from the course's published local-baseline tag and follow the lesson
+checkpoints on the Azure course branch. Do not apply a later Terraform stage
+early: a later stage can create resources, dependencies, and cost that the
+course has not introduced yet.
+
+See `docs/README.md`, `platform/terraform/README.md`, and
+`docs/azure/RECORDING-ASSET-MAP.md` for validation and recording guidance.

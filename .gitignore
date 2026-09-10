@@ -35,6 +35,7 @@ docker-data/
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfplan
 crash.log
 *.tfvars
 !*.tfvars.example

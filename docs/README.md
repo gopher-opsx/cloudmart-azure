@@ -1,27 +1,47 @@
-# Development completion plan
+# CloudMart course implementation status
 
-The core CloudMart application is complete and verified locally. Azure work begins only after the following release gates pass.
+The local application and the prepared Azure course implementation are present
+in this repository. The course deliberately separates application validation,
+progressive Azure infrastructure, workload deployment, security, observability,
+delivery automation, final acceptance, and teardown.
 
-## Completed
+## Implemented
 
-- Angular storefront and Web BFF
+- Angular Storefront and Web BFF
 - Catalog, Cart, Order, Inventory, Payment, and Notification services
-- PostgreSQL, Redis, and Kafka persistence
+- PostgreSQL, Redis, and Kafka local persistence
 - Successful and compensated Saga paths
 - Transactional outboxes and idempotent consumers
-- Production multi-stage Docker images
-- One-command Compose stack with health ordering
-- Automated HTTP/Kafka business smoke test
+- OpenTelemetry HTTP tracing and Prometheus-format application metrics
+- Production multi-stage Docker images and Docker Compose health ordering
+- Repeatable PostgreSQL migration and Azure verification helpers
+- Terraform modules and Lesson 22–95 progressive stage files
+- Azure Container Apps, ACR, PostgreSQL Flexible Server, Azure Managed Redis,
+  Event Hubs, Key Vault, managed identities, RBAC, and observability resources
+- Security, troubleshooting, release, acceptance, evidence, and cleanup helpers
+- GitHub Actions CI and OIDC-based Azure delivery workflow
 
-## Remaining before Azure
+## Validation layers
 
-1. Observability: structured JSON logs, W3C trace propagation, OpenTelemetry Collector, Prometheus, Grafana, and trace/metric verification.
-2. Migration automation: repeatable versioned migration runner for fresh and existing databases.
-3. Browser automation: storefront success and cancellation flows using Playwright.
-4. Quality gate: all Go tests, Angular tests/build, Compose smoke, contract validation, and image build in one command.
-5. Operations: backup/restore notes, reset procedure, troubleshooting, and failure-injection exercises.
-6. Release: final architecture diagram, clean Git status, local baseline tag, and release notes.
+1. `make ci-local` validates Go services, the Angular application, and Compose configuration.
+2. `make compose-local-up` and `make compose-local-smoke` validate both local Saga outcomes.
+3. Terraform format, initialization, validation, plan review, apply, and Azure verification are performed at each lesson checkpoint.
+4. `scripts/acceptance/verify-final-system.sh` runs the machine-repeatable final Azure acceptance gate.
+5. Lessons 90–92 add browser, Saga, telemetry, security, and sanitized evidence checks.
+6. Lessons 94–95 destroy and verify both the workload and the separately managed Terraform-state bootstrap.
 
-## Definition of ready for Azure
+## Important observability boundary
 
-One command starts the stack; health checks converge; unit, browser, and both Saga tests pass; telemetry connects a browser request to backend work; databases migrate repeatably; documentation matches reality; and the local baseline is tagged.
+The Go HTTP services emit OpenTelemetry HTTP spans, and synchronous BFF-to-service
+calls propagate W3C trace context. The asynchronous Saga is correlated across
+Inventory, Payment, Order, and Notification by its Order ID and event IDs in
+logs and durable database records. The prepared application does not claim one
+continuous OpenTelemetry span tree across Kafka/Event Hubs consumers.
+
+## Recording gates
+
+Before recording, verify the actual Git repository—not an exported ZIP—contains
+the published local-baseline tag and the intended Azure course branch/history.
+Also complete one live Azure rehearsal because subscription capacity, regional
+SKU availability, Azure CLI behavior, RBAC propagation, and provisioning time
+cannot be proven by static repository validation.

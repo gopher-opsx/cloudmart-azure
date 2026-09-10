@@ -86,8 +86,7 @@ main_fqdn="$(
     --query properties.configuration.ingress.fqdn \
     -o tsv
 )"
-suffix_fqdn="${main_fqdn#${APP}.}"
-candidate_fqdn="${APP}---candidate.${suffix_fqdn}"
+candidate_fqdn="candidate---${main_fqdn}"
 
 cat <<EOF
 STABLE_REVISION=${stable}

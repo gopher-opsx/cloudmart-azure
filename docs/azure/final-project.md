@@ -25,7 +25,7 @@ Use this document as the sanitized engineering record for the completed course.
 Record PASS/FAIL only. Do not paste credentials or Terraform state.
 
 - Terraform stable:
-- 8 Container Apps healthy:
+- 8 Container Apps provisioned with active revisions (workers may scale to zero):
 - Public Storefront:
 - Internal service discovery:
 - Catalog:
@@ -35,7 +35,8 @@ Record PASS/FAIL only. Do not paste credentials or Terraform state.
 - Security baseline:
 - Logs:
 - Metrics:
-- Traces:
+- Synchronous HTTP traces:
+- Asynchronous Saga correlation by order/event ID and logs:
 - Scaling:
 - CI:
 - CD:

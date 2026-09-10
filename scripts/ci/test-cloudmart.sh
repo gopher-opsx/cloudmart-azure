@@ -3,6 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"
 require_cmd go
+require_cmd npm
 
 for mod in "$ROOT"/services/*; do
   [[ -f "$mod/go.mod" ]] || continue
@@ -11,10 +12,11 @@ for mod in "$ROOT"/services/*; do
   pass "${mod#$ROOT/}"
 done
 
-if command -v npm >/dev/null 2>&1; then
-  info "storefront tests/build"
-  (cd "$ROOT/apps/storefront" && npm ci && npm test -- --watch=false --browsers=ChromeHeadless 2>/dev/null || npm run build)
-  pass "storefront validation"
-else
-  info "npm not installed; storefront validation skipped locally"
-fi
+info "storefront tests/build"
+(
+  cd "$ROOT/apps/storefront"
+  npm ci
+  npm test -- --watch=false
+  npm run build
+)
+pass "storefront validation"

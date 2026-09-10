@@ -21,7 +21,10 @@ This file maps the automation-heavy lessons to the repository assets that should
 | 87 | `scripts/cd/smoke-test.sh` | Bounded post-deployment functional gate. |
 | 88 | `candidate-verify.sh`, `set-storefront-traffic.sh` | Candidate verification and weighted rollout/rollback. |
 | 89 | `scripts/final-project/post-provision.sh` | Rebuild orchestration after Terraform apply. |
-| 94-95 | `scripts/bootstrap/destroy-tfstate.sh` | Remove the separately retained state bootstrap only after workload verification. |
+| 90 | `scripts/acceptance/verify-final-system.sh` | Consolidated final application/platform acceptance. |
+| 92 | `scripts/acceptance/capture-final-evidence.sh` | Sanitized final evidence capture. |
+| 94 | `scripts/acceptance/verify-workload-destroyed.sh` | Verify the Terraform-managed workload is gone while state remains available. |
+| 95 | `scripts/bootstrap/destroy-tfstate.sh`, `scripts/acceptance/verify-course-cleanup.sh` | Remove the retained state bootstrap, then verify active-resource cleanup. |
 
 ## Files intentionally created locally and not committed
 
