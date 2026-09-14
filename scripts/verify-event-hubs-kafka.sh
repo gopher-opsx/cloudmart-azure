@@ -7,19 +7,34 @@ set -euo pipefail
 : "${KAFKA_SASL_PASSWORD:?set KAFKA_SASL_PASSWORD}"
 
 KCAT_IMAGE="${KCAT_IMAGE:-edenhill/kcat:1.7.1}"
-TOPIC="${KAFKA_TEST_TOPIC:-cloudmart-connectivity-test}"
-GROUP="${KAFKA_TEST_GROUP:-cloudmart-connectivity-test}"
+TOPIC="${KAFKA_TEST_TOPIC:-cloudmart-connectivity-$(date +%s)-$RANDOM}"
+GROUP="${KAFKA_TEST_GROUP:-$TOPIC}"
 MESSAGE_KEY="connectivity-key"
 MESSAGE_VALUE='{"eventId":"connectivity-test-001","eventType":"connectivity.test","source":"kafka-tools-container"}'
 
+# Refuse permanent streams and existing names before arming cleanup.
+[[ "$TOPIC" == cloudmart-connectivity-* ]] || { echo "Use a cloudmart-connectivity-* test name" >&2; exit 1; }
+existing="$(az eventhubs eventhub list --resource-group "$AZURE_RESOURCE_GROUP" --namespace-name "$EVENT_HUBS_NAMESPACE" --query '[].name' -o tsv)"
+while IFS= read -r name; do
+  [[ "${name%$'\r'}" != "$TOPIC" ]] || { echo "Test Event Hub already exists; choose another name" >&2; exit 1; }
+done <<< "$existing"
+created=false
+
 cleanup() {
+  local result=$?
+  trap - EXIT
+  [[ "$created" == true ]] || exit "$result"
   echo
   echo "Removing temporary Event Hub: ${TOPIC}"
   az eventhubs eventhub delete \
     --resource-group "${AZURE_RESOURCE_GROUP}" \
     --namespace-name "${EVENT_HUBS_NAMESPACE}" \
     --name "${TOPIC}" \
-    --only-show-errors >/dev/null 2>&1 || true
+    --only-show-errors >/dev/null || {
+      echo "FAIL temporary Event Hub cleanup: $TOPIC" >&2
+      exit 1
+    }
+  exit "$result"
 }
 trap cleanup EXIT
 
@@ -32,6 +47,7 @@ az eventhubs eventhub create \
   --retention-time-in-hours 1 \
   --cleanup-policy Delete \
   --only-show-errors >/dev/null
+created=true
 echo "PASS temporary Event Hub created"
 
 docker_kcat() {
@@ -62,13 +78,11 @@ echo "PASS produce"
 echo "Consuming event..."
 received="$(
   docker_kcat "${common[@]}" \
-    -C \
-    -t "${TOPIC}" \
-    -G "${GROUP}" \
     -o beginning \
     -c 1 \
     -q \
-    -f '%k:%s' 2>/dev/null || true
+    -f '%k:%s' \
+    -G "${GROUP}" "${TOPIC}"
 )"
 
 expected="${MESSAGE_KEY}:${MESSAGE_VALUE}"
