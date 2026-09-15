@@ -31,6 +31,6 @@ location="$(
 [[ "${location}" == https://* ]] || fail "Storefront HTTP did not redirect to HTTPS"
 pass "Storefront HTTP -> HTTPS redirect"
 
-"${ROOT}/scripts/security/audit-container-app-ingress.sh"
+bash "${ROOT}/scripts/security/audit-container-app-ingress.sh"
 
 pass "NETWORK AND TRANSPORT"

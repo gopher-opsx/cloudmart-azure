@@ -81,10 +81,12 @@ module "catalog_app" {
   }
 
   key_vault_secrets = {
-    database-url = (
-      var.troubleshooting_catalog_db_failure
-      ? azurerm_key_vault_secret.catalog_database_url_failure[0].versionless_id
-      : azurerm_key_vault_secret.catalog_database_url[0].versionless_id
+    database-url = azurerm_key_vault_secret.inventory_database_url[0].versionless_id
+
+    event-hubs-connection = (
+      var.troubleshooting_inventory_kafka_failure
+      ? azurerm_key_vault_secret.event_hubs_connection_string_failure[0].versionless_id
+      : azurerm_key_vault_secret.event_hubs_connection_string[0].versionless_id
     )
   }
 

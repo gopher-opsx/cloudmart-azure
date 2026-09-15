@@ -41,13 +41,13 @@ az monitor metrics list-definitions \
   --query '[].name.value' \
   -o json > "$OUT/storefront-metric-definitions.json"
 
-"$ROOT/scripts/security/verify-security-baseline.sh" \
+bash "$ROOT/scripts/security/verify-security-baseline.sh" \
   > "$OUT/security-baseline.txt" 2>&1
 
-"$ROOT/scripts/cd/verify-release.sh" \
+bash "$ROOT/scripts/cd/verify-release.sh" \
   > "$OUT/release-verification.txt" 2>&1
 
-"$ROOT/scripts/container-apps/verify-backend-runtime.sh" \
+bash "$ROOT/scripts/container-apps/verify-backend-runtime.sh" \
   > "$OUT/backend-runtime.txt" 2>&1
 
 cat > "$OUT/README.txt" <<EOF

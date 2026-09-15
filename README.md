@@ -127,16 +127,23 @@ Run each long-lived target in a separate terminal. `make app-stop` stops only ap
 - `monitoring` — prepared KQL queries
 - `.github/workflows` — independent CI and Azure delivery workflows
 
-## Course execution model
+## Course execution conventions
 
-The complete implementation is kept in the repository. Terraform lesson-stage
-files under `platform/terraform/environments/training/stages/` progressively
-activate only the resources introduced by each lesson.
+Unless a lesson says otherwise:
 
-Start from the course's published local-baseline tag and follow the lesson
-checkpoints on the Azure course branch. Do not apply a later Terraform stage
-early: a later stage can create resources, dependencies, and cost that the
-course has not introduced yet.
-
-See `docs/README.md`, `platform/terraform/README.md`, and
-`docs/azure/RECORDING-ASSET-MAP.md` for validation and recording guidance.
+- Run commands from the repository root.
+- On Windows, use Git Bash for the course terminal.
+- Use `docker compose` directly; Make is not required.
+- Terraform configuration lives under:
+  `platform/terraform/environments/training`
+- Course helper scripts are already prepared under `scripts/`.
+- Run shell helpers with:
+  `bash scripts/<path>/<script>.sh`
+- Do not commit `terraform.tfvars`, backend configuration, Terraform state,
+  generated release files, passwords, connection strings, or other credentials.
+- Load sensitive Terraform values only when required and remove them from the
+  shell environment after use.
+- Long Azure provisioning/deletion waits shown in the course may be shortened
+  in the recording; students should allow the command to complete normally.
+- If a verification command fails, stop at that lesson and resolve the failure
+  before continuing. Later lessons assume the previous checkpoint passed.

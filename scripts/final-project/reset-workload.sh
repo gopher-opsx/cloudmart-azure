@@ -26,6 +26,6 @@ terraform -chdir="$TF_DIR" plan \
 
 terraform -chdir="$TF_DIR" apply cloudmart-final-reset.tfplan
 
-"$ROOT/scripts/acceptance/verify-workload-destroyed.sh"
+bash "$ROOT/scripts/acceptance/verify-workload-destroyed.sh"
 
 pass "FINAL PROJECT CLEAN CHECKPOINT READY"

@@ -1,8 +1,17 @@
-# CloudMart recording asset map
+# CloudMart course lab map
 
-This file maps the automation-heavy lessons to the repository assets that should be opened or executed during recording.
+This file maps the automation-heavy course lessons to the repository assets
+students review or execute during the hands-on labs.
 
-| Lesson | Asset | Recording use |
+The implementation is intentionally prepared in advance so the course can focus
+on architecture decisions, execution, verification, troubleshooting, and
+operational reasoning instead of repeatedly typing large configuration files.
+
+# CloudMart labs asset map
+
+This file maps the automation-heavy lessons to the repository assets that should be opened or executed during lab.
+
+| Lesson | Asset | Lab use |
 |---|---|---|
 | 29 | `scripts/build-and-push-cloudmart-images.sh` | Explain one Buildx operation, then run the helper for all eight images. |
 | 30 | `scripts/record-cloudmart-image-digests.sh` | Resolve SHA/version tags and write immutable release evidence. |
@@ -32,4 +41,5 @@ This file maps the automation-heavy lessons to the repository assets that should
 - `platform/terraform/environments/training/terraform.tfvars` from its example
 - `platform/terraform/environments/training/training.azurerm.tfbackend` from its example
 
-Always rehearse destructive and Azure-changing helpers before recording.
+Always review the command and its expected scope before running a destructive
+or Azure-changing helper.

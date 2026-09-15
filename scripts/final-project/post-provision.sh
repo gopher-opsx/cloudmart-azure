@@ -7,6 +7,6 @@ source "$ROOT/scripts/lib/course-common.sh"
 VERIFY="$ROOT/scripts/acceptance/verify-final-system.sh"
 [[ -x "$VERIFY" ]] || fail "final acceptance helper missing or not executable: $VERIFY"
 
-"$VERIFY"
+bash "$VERIFY"
 
 pass "FINAL PROJECT POST-PROVISION VERIFICATION"

@@ -10,16 +10,16 @@ require_cmd curl
 RG="$(cloudmart_rg)"
 
 info "platform foundation"
-"$ROOT/scripts/verify-platform-foundation.sh"
+bash "$ROOT/scripts/verify-platform-foundation.sh"
 
 info "Container App revisions"
-"$ROOT/scripts/cd/verify-release.sh"
+bash "$ROOT/scripts/cd/verify-release.sh"
 
 info "backend runtime and internal discovery"
-"$ROOT/scripts/container-apps/verify-backend-runtime.sh"
+bash "$ROOT/scripts/container-apps/verify-backend-runtime.sh"
 
 info "security baseline"
-"$ROOT/scripts/security/verify-security-baseline.sh"
+bash "$ROOT/scripts/security/verify-security-baseline.sh"
 
 storefront_fqdn="$(
   az containerapp show \
@@ -33,6 +33,6 @@ storefront_fqdn="$(
 export STOREFRONT_URL="https://${storefront_fqdn}"
 
 info "public application smoke test: ${STOREFRONT_URL}"
-"$ROOT/scripts/cd/smoke-test.sh"
+bash "$ROOT/scripts/cd/smoke-test.sh"
 
 pass "FINAL CLOUDMART SYSTEM ACCEPTANCE"

@@ -50,14 +50,14 @@ pass "final-project release metadata generated"
 az acr login --name "$ACR_NAME" >/dev/null
 pass "Docker authenticated to ACR"
 
-"$ROOT/scripts/build-and-push-cloudmart-images.sh"
-"$ROOT/scripts/record-cloudmart-image-digests.sh"
-"$ROOT/scripts/terraform/render-release-tfvars.sh"
+bash "$ROOT/scripts/build-and-push-cloudmart-images.sh"
+bash "$ROOT/scripts/record-cloudmart-image-digests.sh"
+bash "$ROOT/scripts/terraform/render-release-tfvars.sh"
 
 POSTGRESQL_HOST="$POSTGRESQL_HOST" \
 POSTGRESQL_ADMIN="$POSTGRESQL_ADMIN" \
 POSTGRESQL_PASSWORD="$TF_VAR_postgresql_administrator_password" \
-  "$ROOT/scripts/data/run-postgres-migrations.sh"
+  bash "$ROOT/scripts/data/run-postgres-migrations.sh"
 
 pass "FINAL PROJECT RELEASE PREPARED"
 info "Fresh images exist in the recreated ACR."

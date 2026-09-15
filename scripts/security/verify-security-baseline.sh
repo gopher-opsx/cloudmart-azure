@@ -16,7 +16,7 @@ checks=(
 
 for check in "${checks[@]}"; do
   info "running ${check}"
-  "${ROOT}/${check}"
+  bash "${ROOT}/${check}"
 done
 
 pass "CLOUDMART SECURITY BASELINE"
