@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Removes the course GitHub Actions OIDC application and service principal from Microsoft Entra ID.
+# Workflow: Requires an explicit confirmation value before deleting the separately managed deployment identity.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

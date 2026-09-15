@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Scans deployed Container App configuration for secrets that appear directly in environment values.
+# Workflow: Fails the security gate when sensitive configuration is exposed instead of referenced securely.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Bootstraps the Azure Storage backend used for Terraform remote state.
+# Workflow: Creates the state resource group/account/container, grants data access, and prints the backend values for Terraform.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

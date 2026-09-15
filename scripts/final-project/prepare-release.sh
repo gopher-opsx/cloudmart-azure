@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Prepares a fresh application release for the final rebuild exercise.
+# Workflow: Builds/pushes images, records digests, renders Terraform release inputs, and runs database migrations.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

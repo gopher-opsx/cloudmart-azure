@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Captures sanitized final-course evidence from security, release, runtime, and Azure checks.
+# Workflow: Runs existing verification helpers and writes their outputs to a local evidence directory for review.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

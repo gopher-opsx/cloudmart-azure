@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Verifies a Storefront candidate revision before production traffic is increased.
+# Workflow: Checks the candidate endpoint and application behavior so promotion is based on a working revision.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

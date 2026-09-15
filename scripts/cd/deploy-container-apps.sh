@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Deploys the image digests from a release manifest to the CloudMart Container Apps.
+# Workflow: Updates each app to an immutable image reference and can intentionally skip Storefront for candidate-safe rollout.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

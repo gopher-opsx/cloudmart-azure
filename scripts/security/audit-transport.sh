@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Runs transport-security checks for the CloudMart ingress path.
+# Workflow: Combines HTTPS/ingress verification so external traffic follows the intended secure boundary.
+
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Confirms that the Terraform-managed CloudMart workload has been removed.
+# Workflow: Checks Azure for remaining workload resource groups/resources and reports a clean teardown only when none remain.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Runs the application test suite used by CI before images are built or deployed.
+# Workflow: Executes the Go and Angular validation commands from a single repeatable entry point.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Applies the prepared PostgreSQL schema migrations to the Azure databases.
+# Workflow: Uses supplied PostgreSQL connection values and runs each service migration in the required order.
+
 set -euo pipefail
 
 : "${POSTGRESQL_HOST:?set POSTGRESQL_HOST}"

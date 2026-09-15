@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Verifies that CloudMart Azure workloads have the expected managed identities attached.
+# Workflow: Confirms identity-based access is present before dependent RBAC and secret checks are trusted.
+
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"

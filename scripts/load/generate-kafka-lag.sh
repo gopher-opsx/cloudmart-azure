@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Generates controlled Event Hubs/Kafka backlog for worker-scaling demonstrations.
+# Workflow: Publishes synthetic messages to create measurable consumer lag without requiring real checkout traffic.
+
 set -euo pipefail
 
 : "${KAFKA_BROKERS:?set KAFKA_BROKERS}"

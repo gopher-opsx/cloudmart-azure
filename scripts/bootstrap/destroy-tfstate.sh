@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Deletes the separately bootstrapped Terraform-state storage resources after workload teardown.
+# Workflow: Uses explicit confirmation and Azure CLI checks so remote state is removed only at the end of the course lifecycle.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

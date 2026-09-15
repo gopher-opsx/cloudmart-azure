@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Checks that the workstation has the commands, Azure login, and repository state required for the final project.
+# Workflow: Fails early when a prerequisite is missing so the rebuild is not started from an invalid environment.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

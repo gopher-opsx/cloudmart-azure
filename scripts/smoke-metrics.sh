@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
+# Purpose: Checks that the local services expose Prometheus-format metrics after traffic has been generated.
+# Workflow: Queries metric endpoints and verifies expected application telemetry is available for scraping.
+
 set -eu
 
 for port in 8080 8081 8082 8083 8084 8085 8086; do

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Enables the controlled Catalog database-connectivity failure used in troubleshooting labs.
+# Workflow: Writes a temporary Terraform override so Catalog fails its startup database check in a predictable way.
+
 set -euo pipefail
 
 TARGET="platform/terraform/environments/training/troubleshooting.auto.tfvars"

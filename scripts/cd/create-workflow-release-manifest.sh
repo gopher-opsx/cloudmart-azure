@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Creates the immutable release manifest used by the GitHub Actions delivery jobs.
+# Workflow: Resolves each CloudMart image to a registry digest and records the Git SHA for repeatable deployment.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

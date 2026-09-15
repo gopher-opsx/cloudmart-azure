@@ -133,7 +133,7 @@ The course uses the complete Docker Compose environment as the default local run
 - `services` — independently deployable Go services
 - `contracts` — HTTP and event contract examples
 - `platform` — Docker, database, and local platform configuration
-- `scripts` — repeatable operational and smoke-test commands
+- `scripts` — repeatable operational and smoke-test commands; see `docs/BASH-SCRIPT-REFERENCE.md` for a concise guide to every helper
 - `docs` — architecture decisions, Azure operating notes, and course lab map
 - `monitoring` — prepared KQL queries
 - `.github/workflows` — independent CI and Azure delivery workflows

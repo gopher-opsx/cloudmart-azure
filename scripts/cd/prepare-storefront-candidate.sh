@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Creates a new Storefront revision that can be tested before receiving normal user traffic.
+# Workflow: Deploys the candidate image and prepares revision metadata used by verification and traffic-shifting steps.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

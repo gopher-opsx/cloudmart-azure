@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Checks that the deployed Container Apps are healthy after a release.
+# Workflow: Verifies provisioning state and active revisions so a delivery job can fail before declaring success.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"

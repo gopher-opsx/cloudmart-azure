@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Runs the database-migration phase used by the final-project workflow.
+# Workflow: Collects the required Terraform/Azure outputs and invokes the shared PostgreSQL migration helper.
+
 set -euo pipefail
 : "${PGHOST:?set PGHOST}"
 : "${PGUSER:?set PGUSER}"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Builds or validates all CloudMart container images as a CI quality gate.
+# Workflow: Catches Dockerfile and build-context failures across the eight deployable components before release.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"

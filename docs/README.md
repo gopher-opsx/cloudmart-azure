@@ -41,3 +41,7 @@ continuous OpenTelemetry span tree across Kafka/Event Hubs consumers.
 ## Lab readiness gates
 
 Before running the Azure labs, verify the actual Git repository—not an exported ZIP—contains the intended course history and required release assets. Complete one live Azure rehearsal before publishing the course because subscription capacity, regional SKU availability, Azure CLI behavior, RBAC propagation, and provisioning time cannot be proven by static repository validation.
+## Bash helper reference
+
+See [`BASH-SCRIPT-REFERENCE.md`](BASH-SCRIPT-REFERENCE.md) for a concise explanation of every course Bash helper and the reusable automation patterns inside them.
+

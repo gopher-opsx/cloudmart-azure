@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Applies explicit traffic weights to Storefront revisions in Azure Container Apps.
+# Workflow: Provides the reusable Azure CLI operation used by candidate, promotion, and rollback workflows.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

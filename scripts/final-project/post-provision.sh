@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Runs the acceptance sequence after the final Terraform rebuild has completed.
+# Workflow: Delegates to the final-system verifier so the rebuilt environment must pass the same reusable checks.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

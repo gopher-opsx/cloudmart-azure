@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Runs the machine-repeatable acceptance checks for the completed Azure deployment.
+# Workflow: Combines platform, release, runtime, security, and smoke verification into one final gate.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

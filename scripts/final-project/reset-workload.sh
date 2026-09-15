@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Destroys the Terraform-managed workload before the final rebuild exercise.
+# Workflow: Performs the guarded reset and then verifies that the workload resources are actually gone.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
+# Purpose: Exercises business operations that produce useful application metrics for observability labs.
+# Workflow: Creates predictable traffic so students can verify that business-level telemetry appears in the monitoring stack.
+
 set -eu
 
 required="cloudmart_orders_created_total cloudmart_orders_confirmed_total cloudmart_orders_cancelled_total cloudmart_payments_authorized_total cloudmart_payments_failed_total cloudmart_inventory_reserved_total cloudmart_inventory_released_total cloudmart_notifications_delivered_total"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Applies a selected progressive CloudMart Terraform lesson stage.
+# Workflow: Wraps Terraform apply with the course backend/stage conventions so lesson execution stays repeatable.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

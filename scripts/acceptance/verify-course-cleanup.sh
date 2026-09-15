@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Verifies that CloudMart workload resources, bootstrap state, and the GitHub OIDC identity are no longer active.
+# Workflow: Queries Azure after teardown and fails if course-owned resources or identity objects still remain.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

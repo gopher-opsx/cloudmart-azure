@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Verifies the deployed backend Container Apps and their runtime health in Azure.
+# Workflow: Checks expected apps/revisions and surfaces failures before higher-level acceptance tests continue.
+
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"

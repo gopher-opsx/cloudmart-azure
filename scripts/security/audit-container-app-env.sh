@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Audits Container App environment variables for the expected secure runtime configuration.
+# Workflow: Inspects deployed settings and reports values that violate the course security baseline.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"

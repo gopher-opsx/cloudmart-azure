@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Resolves pushed CloudMart images to immutable ACR digests and records them for deployment.
+# Workflow: Turns mutable tags into stable digest references that Terraform and release workflows can consume safely.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

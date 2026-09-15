@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Verifies the Event Hubs Kafka-compatible endpoint and required messaging configuration.
+# Workflow: Checks the Azure namespace/hub/auth setup before event-driven services depend on it.
+
 set -euo pipefail
 
 : "${AZURE_RESOURCE_GROUP:?set AZURE_RESOURCE_GROUP}"

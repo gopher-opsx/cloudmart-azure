@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Verifies the Azure PostgreSQL server, databases, and expected connectivity prerequisites.
+# Workflow: Uses Azure and PostgreSQL checks to confirm the data tier is ready for application workloads.
+
 set -euo pipefail
 
 : "${POSTGRESQL_HOST:?set POSTGRESQL_HOST}"

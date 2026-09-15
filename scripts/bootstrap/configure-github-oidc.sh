@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Creates or reuses the Microsoft Entra application, service principal, and federated credential used by GitHub Actions.
+# Workflow: Grants the minimum Azure roles required for OIDC-based image publishing and Container Apps delivery.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

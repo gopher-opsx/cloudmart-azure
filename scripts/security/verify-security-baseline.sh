@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Runs all prepared CloudMart security audits as one baseline gate.
+# Workflow: Executes the individual identity, secret, RBAC, ingress, and transport checks and stops on the first failure.
+
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"

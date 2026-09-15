@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Renders Terraform image inputs from the recorded immutable CloudMart release digests.
+# Workflow: Produces the generated release tfvars consumed by infrastructure deployment without hand-copying image references.
+
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"

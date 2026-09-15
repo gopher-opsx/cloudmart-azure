@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Checks that sensitive Container App settings are sourced from Azure Key Vault references.
+# Workflow: Detects deployments that bypass the expected secret-reference pattern.
+
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"

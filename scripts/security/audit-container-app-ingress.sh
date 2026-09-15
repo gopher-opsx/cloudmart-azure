@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Audits which Container Apps are public and which are internal-only.
+# Workflow: Verifies the intended ingress boundary: Storefront public, application backends private.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"

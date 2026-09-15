@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Rolls Storefront traffic back to the previously stable revision.
+# Workflow: Finds the stable revision and restores traffic without rebuilding the application images.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

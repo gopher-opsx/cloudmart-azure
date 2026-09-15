@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Verifies the main Azure platform foundation created by Terraform.
+# Workflow: Checks the expected resource group and core shared services before workload deployment proceeds.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/scripts/lib/course-common.sh"

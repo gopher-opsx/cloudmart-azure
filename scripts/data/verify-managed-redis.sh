@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Checks connectivity and configuration for Azure Managed Redis used by the Cart service.
+# Workflow: Queries the deployed cache and validates the expected secure runtime settings.
+
 set -euo pipefail
 
 : "${REDIS_HOST:?set REDIS_HOST}"

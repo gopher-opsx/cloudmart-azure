@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Generates the local release metadata file from Terraform, Azure, and Git.
+# Workflow: Resolves ACR details and the current Git SHA so students avoid manually copying release values.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

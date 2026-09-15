@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
+# Purpose: Validates the complete local CloudMart business flow through the Web BFF.
+# Workflow: Creates one successful and one compensated order, then waits for confirmed and cancelled Saga outcomes.
+
 set -eu
 
 base_url="${BASE_URL:-http://localhost:8080}"

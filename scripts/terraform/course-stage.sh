@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Resolves and validates the Terraform stage file associated with a lesson number.
+# Workflow: Provides shared stage-selection logic used by the course plan/apply helpers.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

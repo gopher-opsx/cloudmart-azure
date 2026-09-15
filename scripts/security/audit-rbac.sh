@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Audits the important Azure RBAC assignments used by CloudMart workloads.
+# Workflow: Checks that managed identities have the expected scoped permissions without relying on broad shared credentials.
+
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Creates a Terraform plan for a selected CloudMart course stage.
+# Workflow: Loads the prepared backend/stage inputs and shows the infrastructure change before anything is applied.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

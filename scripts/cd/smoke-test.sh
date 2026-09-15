@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Runs the synchronous post-deployment smoke gate through the public Storefront URL.
+# Workflow: Validates HTTPS, health, products, cart add/read/cleanup, and Order API reachability using a temporary customer.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

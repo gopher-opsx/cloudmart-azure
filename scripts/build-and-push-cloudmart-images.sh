@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Builds the CloudMart application images and pushes the release set to Azure Container Registry.
+# Workflow: Uses prepared release metadata so every service image is tagged consistently for the current release.
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

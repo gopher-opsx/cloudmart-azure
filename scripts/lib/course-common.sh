@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Purpose: Provides shared logging, validation, Azure, and assertion helpers used by the course scripts.
+# Usage: This file is sourced by other Bash scripts so common behavior and error handling stay consistent.
+
 set -euo pipefail
 
 pass() { printf 'PASS %s\n' "$*"; }
