@@ -72,13 +72,13 @@ The ignored `terraform.tfvars` still carries account/environment-specific
 values such as `name_suffix`, `owner`, and `publisher_object_id`.
 
 The stage file only controls which part of the complete course infrastructure
-is active at that point in the recording.
+is active at that point in the course.
 
 ## Course-stage safety helpers
 
 The lessons continue to use native Terraform commands and explicit lesson
 stage files. The repository also contains optional guard scripts for dry runs,
-recording preparation, and accidental rollback protection:
+lab preparation, and accidental rollback protection:
 
 ```bash
 ./scripts/terraform/course-stage.sh 35

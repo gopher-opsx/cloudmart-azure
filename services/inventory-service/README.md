@@ -29,7 +29,7 @@ Produces:
 | `INVENTORY_TOPIC` | `inventory` |
 | `KAFKA_CONSUMER_GROUP` | `inventory-service` |
 
-Run with `make inventory-run` or as part of `make compose-local-up`.
+Run as part of the complete Docker Compose stack from the repository root.
 
 
 ### Azure Event Hubs Kafka endpoint

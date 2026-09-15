@@ -4,12 +4,18 @@ CloudMart uses GitHub Actions as an independent quality gate. The workflow runs 
 
 It validates all seven Go modules, tests and builds the Angular storefront, validates the merged Compose configuration, and builds all eight application images without publishing them.
 
-Run the equivalent fast checks locally from the repository root:
+Run the prepared local checks from the repository root:
 
 ```bash
-make ci-local
+bash scripts/ci/test-cloudmart.sh
+bash scripts/ci/validate-images.sh
+
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  config --quiet
 ```
 
-The local target runs Go tests inside Linux containers, which avoids Windows Application Control blocking temporary Go test executables.
+The GitHub Actions workflow remains the authoritative CI implementation. These helpers provide a convenient local preflight before pushing changes.
 
 The workflow intentionally performs CI only. Azure authentication, ACR publication, and deployment belong to the later CD workflow. No repository or Azure secrets are required for this CI workflow.

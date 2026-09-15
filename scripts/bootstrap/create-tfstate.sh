@@ -9,9 +9,10 @@ require_cmd az
 AZURE_LOCATION="${AZURE_LOCATION:-eastus}"
 TFSTATE_RESOURCE_GROUP="${TFSTATE_RESOURCE_GROUP:-rg-cloudmart-tfstate-eastus}"
 TFSTATE_CONTAINER="${TFSTATE_CONTAINER:-tfstate}"
-TFSTATE_STORAGE_ACCOUNT="${TFSTATE_STORAGE_ACCOUNT:-}"
 
-require_env TFSTATE_STORAGE_ACCOUNT
+subscription_id="$(az account show --query id -o tsv)"
+storage_suffix="$(printf '%s' "$subscription_id" | tr -d '-' | tr '[:upper:]' '[:lower:]' | cut -c1-20)"
+TFSTATE_STORAGE_ACCOUNT="${TFSTATE_STORAGE_ACCOUNT:-cmtf${storage_suffix}}"
 
 if ! [[ "$TFSTATE_STORAGE_ACCOUNT" =~ ^[a-z0-9]{3,24}$ ]]; then
   fail "TFSTATE_STORAGE_ACCOUNT must be 3-24 lowercase letters/numbers"

@@ -23,8 +23,8 @@ delivery automation, final acceptance, and teardown.
 
 ## Validation layers
 
-1. `make ci-local` validates Go services, the Angular application, and Compose configuration.
-2. `make compose-local-up` and `make compose-local-smoke` validate both local Saga outcomes.
+1. `bash scripts/ci/test-cloudmart.sh` validates Go services and the Angular application; `bash scripts/ci/validate-images.sh` validates all eight container images.
+2. Direct `docker compose` commands start the local application/observability stack, and `bash scripts/smoke-local.sh` validates both local Saga outcomes.
 3. Terraform format, initialization, validation, plan review, apply, and Azure verification are performed at each lesson checkpoint.
 4. `scripts/acceptance/verify-final-system.sh` runs the machine-repeatable final Azure acceptance gate.
 5. Lessons 90–92 add browser, Saga, telemetry, security, and sanitized evidence checks.
@@ -38,10 +38,6 @@ Inventory, Payment, Order, and Notification by its Order ID and event IDs in
 logs and durable database records. The prepared application does not claim one
 continuous OpenTelemetry span tree across Kafka/Event Hubs consumers.
 
-## Recording gates
+## Lab readiness gates
 
-Before recording, verify the actual Git repository—not an exported ZIP—contains
-the published local-baseline tag and the intended Azure course branch/history.
-Also complete one live Azure rehearsal because subscription capacity, regional
-SKU availability, Azure CLI behavior, RBAC propagation, and provisioning time
-cannot be proven by static repository validation.
+Before running the Azure labs, verify the actual Git repository—not an exported ZIP—contains the intended course history and required release assets. Complete one live Azure rehearsal before publishing the course because subscription capacity, regional SKU availability, Azure CLI behavior, RBAC propagation, and provisioning time cannot be proven by static repository validation.

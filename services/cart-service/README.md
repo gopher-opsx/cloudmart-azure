@@ -26,4 +26,4 @@ Cart routes require `X-Customer-ID`. The storefront sends it to the BFF, which f
 
 Local Docker Redis does not require TLS, so the default remains `false`. For Azure-managed Redis, set `REDIS_TLS_ENABLED=true` and provide the Azure Redis endpoint and secret through `REDIS_ADDR` and `REDIS_PASSWORD`. Certificate verification remains enabled; the client does not use insecure TLS.
 
-Run with `make cart-run` or as part of `make compose-local-up`.
+Run as part of the complete Docker Compose stack from the repository root.

@@ -22,4 +22,4 @@ The BFF forwards content negotiation, `X-Customer-ID`, and W3C `traceparent` hea
 | `ORDER_SERVICE_URL` | `http://localhost:8083` |
 | `ALLOWED_ORIGIN` | `http://localhost:4200` |
 
-Run with `make bff-run`, test with `make bff-test`, or use the complete Compose stack.
+Run as part of the complete Docker Compose stack from the repository root. For service-only development, use the normal Go commands inside `services/web-bff`.

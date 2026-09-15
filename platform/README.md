@@ -5,13 +5,29 @@
 ## Commands
 
 ```bash
-make compose-local-up
-make compose-local-ps
-make compose-local-logs
-make compose-local-smoke
-make compose-local-down
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  up -d --build --wait
+
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  ps
+
+bash scripts/smoke-local.sh
+
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  logs --tail=100 SERVICE_NAME
+
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  down
 ```
 
-Named volumes preserve PostgreSQL and Redis data across ordinary shutdowns. `compose-local-down` does not delete volumes. Never add `--volumes` unless intentionally resetting local data.
+Named volumes preserve PostgreSQL and Redis data across ordinary shutdowns. The normal `docker compose ... down` command does not delete volumes. Never add `--volumes` unless intentionally resetting local data.
 
 Database init scripts run only when PostgreSQL creates a fresh volume. Migrations for existing databases are currently applied explicitly; migration automation is a remaining pre-Azure task.

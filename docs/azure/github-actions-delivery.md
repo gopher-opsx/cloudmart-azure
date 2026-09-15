@@ -6,7 +6,7 @@ The training delivery workflow is intentionally manual:
 .github/workflows/deploy-training.yml
 ```
 
-It uses the GitHub `training` environment and supports these recording stages:
+It uses the GitHub `training` environment and supports these delivery operations:
 
 | Operation | Purpose |
 |---|---|

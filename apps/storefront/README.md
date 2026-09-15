@@ -22,7 +22,7 @@ Azure Container Apps value:
 BFF_UPSTREAM=http://ca-web-bff-training
 ```
 
-If the BFF is unavailable, the UI enters preview mode with local sample data. Preview checkout never creates backend state.
+If the BFF is unavailable, API-backed features report an error; the production Storefront does not fall back to a fake local catalog.
 
 ## Run locally
 
@@ -31,7 +31,7 @@ npm ci
 npm start
 ```
 
-Open `http://localhost:4200`, or run `make storefront-run` from the repository root.
+Open `http://localhost:4200`. The course normally runs the Storefront as part of the complete Docker Compose stack.
 
 ## Verify
 
@@ -53,4 +53,4 @@ docker run --rm \
 
 ## Customer identity
 
-The training UI uses `customer-storefront-demo`. The BFF forwards `X-Customer-ID` to Cart and Order. Microsoft Entra ID will replace this local identity mechanism during the Azure phase.
+The training UI uses `customer-storefront-demo`. The BFF forwards `X-Customer-ID` to Cart and Order. This fixed customer identity is intentionally retained for the training application so the Azure lessons can focus on platform architecture rather than end-user authentication.

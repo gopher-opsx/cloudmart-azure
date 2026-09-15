@@ -33,7 +33,7 @@ The transactional outbox prevents database state and Kafka publication from dive
 | `PAYMENTS_TOPIC` | `payments` |
 | `PAYMENTS_CONSUMER_GROUP` | `order-service-payments` |
 
-Run with `make order-run` or as part of `make compose-local-up`.
+Run as part of the complete Docker Compose stack from the repository root.
 
 
 ### Azure Event Hubs Kafka endpoint

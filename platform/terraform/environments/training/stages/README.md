@@ -26,7 +26,7 @@ The repository intentionally contains stage files from Lesson 22 through
 Lesson 95, even when a particular lesson does not introduce a new Terraform
 resource.
 
-That gives the recording a simple rule:
+That gives the course a simple rule:
 
 > Current lesson number = current Terraform stage file.
 
@@ -49,7 +49,7 @@ The lesson content continues to show normal Terraform commands. The helper
 scripts are safety/convenience tools, not a replacement for learning
 Terraform.
 
-Before a recording, you can inspect the current and target stage:
+Before a lab, you can inspect the current and target stage:
 
 ```bash
 ./scripts/terraform/course-stage.sh 35

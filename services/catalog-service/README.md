@@ -16,4 +16,4 @@ Read-only product catalog API backed by PostgreSQL `catalog_db`.
 | `HTTP_ADDR` | `:8081` |
 | `DATABASE_URL` | `postgres://cloudmart:cloudmart@localhost:5432/catalog_db?sslmode=disable` |
 
-Run with `make catalog-run` or as part of `make compose-local-up`.
+Run as part of the complete Docker Compose stack from the repository root.

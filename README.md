@@ -59,10 +59,15 @@ PostgreSQL transactions combine business-state changes, processed-event markers,
 
 ## Quick start
 
-Requirements: Docker Desktop, Git, Make, and a POSIX-compatible shell such as Git Bash.
+Requirements: Docker Desktop, Git, Git Bash, Python 3, Terraform CLI, and Azure CLI.
+
+Start the complete local application and observability stack:
 
 ```bash
-make compose-local-up
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  up -d --build --wait
 ```
 
 Open `http://localhost:4200`.
@@ -70,35 +75,41 @@ Open `http://localhost:4200`.
 Verify both Saga paths:
 
 ```bash
-make compose-local-smoke
+bash scripts/smoke-local.sh
 ```
 
-Inspect and stop:
+Inspect the stack:
 
 ```bash
-make compose-local-ps
-make compose-local-logs
-make compose-local-down
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  ps
+```
+
+Inspect one service when needed:
+
+```bash
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  logs --tail=100 SERVICE_NAME
+```
+
+Stop the stack:
+
+```bash
+docker compose \
+  -f platform/docker/compose.yaml \
+  -f platform/docker/compose.observability.yaml \
+  down
 ```
 
 The first image build downloads dependencies. Later builds reuse Docker layers and are substantially faster.
 
 ## Development workflow
 
-Individual services can run in cached Go development containers:
-
-```bash
-make catalog-run
-make cart-run
-make order-run
-make inventory-run
-make payment-run
-make notification-run
-make bff-run
-make storefront-run
-```
-
-Run each long-lived target in a separate terminal. `make app-stop` stops only application containers and leaves infrastructure running.
+The course uses the complete Docker Compose environment as the default local runtime so every student follows the same dependency and networking model. Individual component READMEs contain service-specific development commands when needed, but Make is not required for the course.
 
 ## Ports
 
@@ -123,7 +134,7 @@ Run each long-lived target in a separate terminal. `make app-stop` stops only ap
 - `contracts` — HTTP and event contract examples
 - `platform` — Docker, database, and local platform configuration
 - `scripts` — repeatable operational and smoke-test commands
-- `docs` — architecture decisions, Azure operating notes, and recording asset map
+- `docs` — architecture decisions, Azure operating notes, and course lab map
 - `monitoring` — prepared KQL queries
 - `.github/workflows` — independent CI and Azure delivery workflows
 
@@ -143,7 +154,19 @@ Unless a lesson says otherwise:
   generated release files, passwords, connection strings, or other credentials.
 - Load sensitive Terraform values only when required and remove them from the
   shell environment after use.
-- Long Azure provisioning/deletion waits shown in the course may be shortened
-  in the recording; students should allow the command to complete normally.
+- Long Azure provisioning/deletion waits may be shortened in the course video; allow the command to complete normally in your own environment.
 - If a verification command fails, stop at that lesson and resolve the failure
   before continuing. Later lessons assume the previous checkpoint passed.
+
+### Configuration ownership rule
+
+Before modifying or deleting Azure configuration, identify what owns it.
+
+- Terraform-owned infrastructure is changed through Terraform.
+- Bootstrap-created resources are changed through their bootstrap/cleanup scripts.
+- Application release revisions and Storefront traffic are managed by the delivery workflow.
+- Azure CLI is used freely for inspection and troubleshooting, but should not normally be used to manually patch Terraform-owned infrastructure.
+
+Operating pattern:
+
+`identify owner → change source of truth → review → apply → verify`

@@ -12,4 +12,4 @@ Training baseline:
 
 This module intentionally does **not** create secrets, role assignments, or
 managed identities. Those are introduced in later lessons so the course
-sequence remains visible during recording.
+sequence remains visible during the course.

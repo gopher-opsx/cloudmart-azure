@@ -26,7 +26,7 @@ All three writes occur in one transaction. Kafka offsets commit only after succe
 | `ORDERS_TOPIC` | `orders` |
 | `KAFKA_CONSUMER_GROUP` | `notification-service-v1` |
 
-Run with `make notification-run` or as part of `make compose-local-up`.
+Run as part of the complete Docker Compose stack from the repository root.
 
 
 ### Azure Event Hubs Kafka endpoint
