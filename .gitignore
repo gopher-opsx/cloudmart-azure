@@ -12,7 +12,6 @@ coverage.out
 # Node / Angular
 node_modules/
 .angular/
-dist/
 coverage/
 
 # IDE

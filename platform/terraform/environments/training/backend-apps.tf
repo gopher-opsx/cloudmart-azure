@@ -184,7 +184,7 @@ module "order_app" {
   }
 
   key_vault_secrets = {
-    database-url = azurerm_key_vault_secret.order_database_url[0].versionless_id
+    database-url          = azurerm_key_vault_secret.order_database_url[0].versionless_id
     event-hubs-connection = azurerm_key_vault_secret.event_hubs_connection_string[0].versionless_id
   }
 
